@@ -38,6 +38,9 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: false,
   poweredByHeader: false,
+  allowedDevOrigins: [
+    'space-z.ai',
+  ],
   images: {
     remotePatterns: [
       {
@@ -55,6 +58,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'api.qrserver.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'logo.clearbit.com',
       },
     ],
   },
