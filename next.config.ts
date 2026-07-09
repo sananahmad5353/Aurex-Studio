@@ -1,36 +1,5 @@
 import type { NextConfig } from "next";
 
-const securityHeaders = [
-  {
-    key: 'X-DNS-Prefetch-Control',
-    value: 'on',
-  },
-  {
-    key: 'Strict-Transport-Security',
-    value: 'max-age=63072000; includeSubDomains; preload',
-  },
-  {
-    key: 'X-Frame-Options',
-    value: 'ALLOWALL',
-  },
-  {
-    key: 'X-Content-Type-Options',
-    value: 'nosniff',
-  },
-  {
-    key: 'Referrer-Policy',
-    value: 'strict-origin-when-cross-origin',
-  },
-  {
-    key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=(), payment=()',
-  },
-  {
-    key: 'X-Permitted-Cross-Domain-Policies',
-    value: 'none',
-  },
-];
-
 const nextConfig: NextConfig = {
   output: "standalone",
   typescript: {
@@ -43,34 +12,15 @@ const nextConfig: NextConfig = {
   ],
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'sfile.chatglm.cn',
-      },
-      {
-        protocol: 'https',
-        hostname: 'api.qrserver.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'logo.clearbit.com',
-      },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: '*.unsplash.com' },
+      { protocol: 'https', hostname: 'sfile.chatglm.cn' },
+      { protocol: 'https', hostname: 'api.qrserver.com' },
+      { protocol: 'https', hostname: 'logo.clearbit.com' },
     ],
   },
   async headers() {
     return [
-      {
-        source: '/(.*)',
-        headers: securityHeaders,
-      },
       {
         source: '/api/:path*',
         headers: [
