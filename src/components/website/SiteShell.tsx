@@ -16,9 +16,9 @@ const DEFAULT_DATA: SiteData = {
     siteName: 'Aurex Studio',
     whatsappNumber: '+923237939393',
     contactEmail: 'sananahmad5353@gmail.com',
+    facebookUrl: '',
     instagramUrl: '',
     tiktokUrl: '',
-    youtubeUrl: '',
     logoUrl: '',
     address: 'I8 Markaz Islamabad',
   },
@@ -49,6 +49,7 @@ export default function SiteShell({ children }: { children: ReactNode }) {
       <Footer
         siteName={s.siteName || 'Aurex Studio'}
         whatsappNumber={s.whatsappNumber || '+923237939393'}
+        facebookUrl={s.facebookUrl || ''}
         instagramUrl={s.instagramUrl || ''}
         tiktokUrl={s.tiktokUrl || ''}
         youtubeUrl={s.youtubeUrl || ''}

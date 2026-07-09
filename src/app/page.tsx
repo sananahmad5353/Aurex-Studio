@@ -175,6 +175,7 @@ export default function Home() {
       <Footer
         siteName={settings?.siteName || 'Aurex Studio'}
         whatsappNumber={settings?.whatsappNumber || '+923237939393'}
+        facebookUrl={settings?.facebookUrl || ''}
         instagramUrl={settings?.instagramUrl || ''}
         tiktokUrl={settings?.tiktokUrl || ''}
         youtubeUrl={settings?.youtubeUrl || ''}
