@@ -95,7 +95,7 @@ export default function HeroSlider({ slides }: HeroSliderProps) {
                   asChild
                   variant="outline"
                   size="lg"
-                  className="border-white/30 text-white hover:bg-white/10 rounded-full text-base font-semibold"
+                  className="border-white/60 text-white bg-white/10 hover:bg-white/20 rounded-full text-base font-semibold backdrop-blur-sm"
                 >
                   <a href="#services">Our Services</a>
                 </Button>
