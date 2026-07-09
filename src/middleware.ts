@@ -11,7 +11,7 @@ const MAX_BODY_SIZE = 1 * 1024 * 1024;
 function getSecurityHeaders(): Record<string, string> {
   return {
     'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
+    'X-Frame-Options': 'ALLOWALL',
     'X-XSS-Protection': '1; mode=block',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
@@ -36,14 +36,14 @@ function getContentSecurityPolicy(nonce: string): string {
     `default-src 'self'`,
     `script-src 'self' 'nonce-${nonce}' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com`,
     `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
-    `img-src 'self' data: blob: https://images.unsplash.com https://sfile.chatglm.cn https://*.unsplash.com https://wa.me https://api.qrserver.com`,
+    `img-src 'self' data: blob: https://images.unsplash.com https://sfile.chatglm.cn https://*.unsplash.com https://wa.me https://api.qrserver.com https://logo.clearbit.com`,
     `font-src 'self' https://fonts.gstatic.com data:`,
-    `connect-src 'self' https://images.unsplash.com https://sfile.chatglm.cn https://api.stripe.com`,
+    `connect-src 'self' https://images.unsplash.com https://sfile.chatglm.cn https://api.stripe.com https://logo.clearbit.com https://*.space-z.ai`,
     `frame-src https://www.instagram.com https://www.tiktok.com https://www.youtube.com`,
     `media-src https://www.instagram.com https://www.tiktok.com https://*.cdninstagram.com`,
     `base-uri 'self'`,
     `form-action 'self' https://wa.me`,
-    `frame-ancestors 'none'`,
+    `frame-ancestors 'self' https://*.space-z.ai`,
     `object-src 'none'`,
     `require-trusted-types-for 'script'`,
   ].join('; ');
