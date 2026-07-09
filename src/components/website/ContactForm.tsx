@@ -1,0 +1,215 @@
+'use client';
+
+import { useState } from 'react';
+import { Send, Loader2, CheckCircle2, MessageSquare, Mail } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+
+interface ContactFormProps {
+  whatsappNumber: string;
+  contactEmail: string;
+}
+
+export default function ContactForm({ whatsappNumber, contactEmail }: ContactFormProps) {
+  const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const update = (field: string, value: string) => setForm({ ...form, [field]: value });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name || !form.email || !form.message) return;
+
+    setSending(true);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.whatsappUrl) {
+        // Open WhatsApp with pre-filled message
+        window.open(data.whatsappUrl, '_blank');
+        // Also trigger email client after a short delay
+        setTimeout(() => {
+          window.location.href = data.mailtoUrl;
+        }, 1000);
+        setSent(true);
+        setForm({ name: '', email: '', phone: '', subject: '', message: '' });
+      }
+    } catch {
+      // Fallback: open WhatsApp directly
+      const msg = encodeURIComponent(
+        `*New Contact*\n\nName: ${form.name}\nEmail: ${form.email}\n${form.phone ? `Phone: ${form.phone}\n` : ''}${form.subject ? `Subject: ${form.subject}\n` : ''}Message: ${form.message}`
+      );
+      window.open(`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${msg}`, '_blank');
+      setSent(true);
+      setForm({ name: '', email: '', phone: '', subject: '', message: '' });
+    }
+    setSending(false);
+  };
+
+  return (
+    <section id="contact" className="py-20 sm:py-28 bg-slate-50">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+          {/* Left side info */}
+          <div className="flex flex-col justify-center">
+            <span className="inline-block mb-4 px-4 py-1.5 bg-emerald-50 text-emerald-600 text-sm font-semibold rounded-full self-start">
+              Get In Touch
+            </span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-6 leading-tight">
+              Let&apos;s Start a Conversation
+            </h2>
+            <p className="text-lg text-slate-500 leading-relaxed mb-8">
+              Have a project in mind? We&apos;d love to hear from you. Fill out the form and your message will be sent directly to us via WhatsApp and Email.
+            </p>
+
+            <div className="space-y-5">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-slate-900 mb-1">WhatsApp</h4>
+                  <a
+                    href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-600 hover:text-emerald-700 font-medium text-sm transition-colors"
+                  >
+                    {whatsappNumber}
+                  </a>
+                  <p className="text-xs text-slate-400 mt-0.5">Quick response, always available</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                  <Mail className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-slate-900 mb-1">Email</h4>
+                  <a
+                    href={`mailto:${contactEmail}`}
+                    className="text-emerald-600 hover:text-emerald-700 font-medium text-sm transition-colors"
+                  >
+                    {contactEmail}
+                  </a>
+                  <p className="text-xs text-slate-400 mt-0.5">For detailed inquiries & proposals</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right side form */}
+          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+            {sent ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
+                  <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Message Sent!</h3>
+                <p className="text-slate-500 mb-6 max-w-sm">
+                  Your message has been sent via WhatsApp and Email. We&apos;ll get back to you shortly.
+                </p>
+                <Button
+                  onClick={() => setSent(false)}
+                  variant="outline"
+                  className="rounded-full"
+                >
+                  Send Another Message
+                </Button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Full Name *</Label>
+                    <Input
+                      id="name"
+                      value={form.name}
+                      onChange={(e) => update('name', e.target.value)}
+                      placeholder="John Doe"
+                      className="mt-1.5"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email Address *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => update('email', e.target.value)}
+                      placeholder="john@example.com"
+                      className="mt-1.5"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={form.phone}
+                      onChange={(e) => update('phone', e.target.value)}
+                      placeholder="+92 323 7939393"
+                      className="mt-1.5"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="subject">Subject</Label>
+                    <Input
+                      id="subject"
+                      value={form.subject}
+                      onChange={(e) => update('subject', e.target.value)}
+                      placeholder="Project Inquiry"
+                      className="mt-1.5"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="message">Message *</Label>
+                  <Textarea
+                    id="message"
+                    value={form.message}
+                    onChange={(e) => update('message', e.target.value)}
+                    placeholder="Tell us about your project, goals, and how we can help..."
+                    className="mt-1.5 min-h-[120px]"
+                    rows={5}
+                    required
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={sending || !form.name || !form.email || !form.message}
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-12 text-base font-semibold"
+                >
+                  {sending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" /> Send Message
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-slate-400 text-center">
+                  Your message will be sent via WhatsApp & Email directly
+                </p>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

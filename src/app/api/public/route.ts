@@ -9,21 +9,14 @@ export async function GET() {
       settingsMap[s.key] = s.value;
     }
 
-    const slides = await db.heroSlide.findMany({
-      where: { active: true },
-      orderBy: { order: 'asc' },
-    });
+    const [slides, services, testimonials, partners] = await Promise.all([
+      db.heroSlide.findMany({ where: { active: true }, orderBy: { order: 'asc' } }),
+      db.service.findMany({ where: { active: true }, orderBy: { order: 'asc' } }),
+      db.testimonial.findMany({ where: { active: true }, orderBy: { order: 'asc' } }),
+      db.partner.findMany({ where: { active: true }, orderBy: { order: 'asc' } }),
+    ]);
 
-    const services = await db.service.findMany({
-      where: { active: true },
-      orderBy: { order: 'asc' },
-    });
-
-    return NextResponse.json({
-      settings: settingsMap,
-      slides,
-      services,
-    });
+    return NextResponse.json({ settings: settingsMap, slides, services, testimonials, partners });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
   }

@@ -1,0 +1,856 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useCallback } from 'react';
+     4→import {
+     5→  X, Save, Plus, Trash2, Edit3, LogOut, Settings, ImageIcon, Layers, KeyRound, Loader2,
+     6→  Target, BarChart3, TrendingUp, Rocket, Users, Filter, Handshake, Lightbulb,
+     7→  ArrowRight, Zap, Globe, Search, Mail, Megaphone, PieChart, Database,
+     8→  Code, Cpu, Smartphone, Palette, PenTool, Monitor, Shield, Star, Heart,
+     9→  Award, Bookmark, Briefcase, Calendar, Camera, Cloud,
+    10→} from 'lucide-react';
+    11→import type { LucideIcon } from 'lucide-react';
+    12→import { Button } from '@/components/ui/button';
+    13→import { Input } from '@/components/ui/input';
+    14→import { Textarea } from '@/components/ui/textarea';
+    15→import { Label } from '@/components/ui/label';
+    16→import { Switch } from '@/components/ui/switch';
+    17→import { useToast } from '@/hooks/use-toast';
+    18→
+    19→const iconMap: Record<string, LucideIcon> = {
+    20→  Target, BarChart3, TrendingUp, Rocket, Users, Filter, Handshake, Lightbulb,
+    21→  ArrowRight, Zap, Globe, Search, Mail, Megaphone, PieChart, Database,
+    22→  Code, Cpu, Smartphone, Palette, PenTool, Monitor, Settings, Shield,
+    23→  Star, Heart, Award, Bookmark, Briefcase, Calendar, Camera, Cloud,
+    24→};
+    25→
+    26→interface Slide {
+    27→  id: string;
+    28→  title: string;
+    29→  subtitle: string;
+    30→  imageUrl: string;
+    31→  ctaText: string;
+    32→  ctaLink: string;
+    33→  order: number;
+    34→  active: boolean;
+    35→}
+    36→
+    37→interface ServiceItem {
+    38→  id: string;
+    39→  title: string;
+    40→  description: string;
+    41→  icon: string;
+    42→  order: number;
+    43→  active: boolean;
+    44→}
+    45→
+    46→interface AdminPanelProps {
+    47→  open: boolean;
+    48→  onClose: () => void;
+    49→}
+    50→
+    51→type Tab = 'settings' | 'slides' | 'services' | 'password';
+    52→
+    53→export default function AdminPanel({ open, onClose }: AdminPanelProps) {
+    54→  const [token, setToken] = useState<string | null>(null);
+    55→  const [email, setEmail] = useState('');
+    56→  const [password, setPassword] = useState('');
+    57→  const [loginLoading, setLoginLoading] = useState(false);
+    58→  const [loginError, setLoginError] = useState('');
+    59→  const [activeTab, setActiveTab] = useState<Tab>('settings');
+    60→  const [loading, setLoading] = useState(false);
+    61→  const { toast } = useToast();
+    62→
+    63→  // Settings state
+    64→  const [settings, setSettings] = useState<Record<string, string>>({});
+    65→  const [aboutStats, setAboutStats] = useState<{ label: string; value: string }[]>([]);
+    66→
+    67→  // Slides state
+    68→  const [slides, setSlides] = useState<Slide[]>([]);
+    69→  const [editingSlide, setEditingSlide] = useState<Partial<Slide> | null>(null);
+    70→  const [slideFormOpen, setSlideFormOpen] = useState(false);
+    71→
+    72→  // Services state
+    73→  const [services, setServices] = useState<ServiceItem[]>([]);
+    74→  const [editingService, setEditingService] = useState<Partial<ServiceItem> | null>(null);
+    75→  const [serviceFormOpen, setServiceFormOpen] = useState(false);
+    76→
+    77→  // Password state
+    78→  const [currentPwd, setCurrentPwd] = useState('');
+    79→  const [newPwd, setNewPwd] = useState('');
+    80→  const [confirmPwd, setConfirmPwd] = useState('');
+    81→
+    82→  const fetchData = useCallback(async () => {
+    83→    try {
+    84→      const res = await fetch('/api/settings');
+    85→      const data = await res.json();
+    86→      setSettings(data);
+    87→      try {
+    88→        const stats = JSON.parse(data.aboutStats || '[]');
+    89→        setAboutStats(stats);
+    90→      } catch {
+    91→        setAboutStats([]);
+    92→      }
+    93→    } catch {
+    94→      // silent
+    95→    }
+    96→
+    97→    try {
+    98→      const res = await fetch('/api/hero-slides');
+    99→      const data = await res.json();
+   100→      if (Array.isArray(data)) setSlides(data);
+   101→    } catch {
+   102→      // silent
+   103→    }
+   104→
+   105→    try {
+   106→      const res = await fetch('/api/services');
+   107→      const data = await res.json();
+   108→      if (Array.isArray(data)) setServices(data);
+   109→    } catch {
+   110→      // silent
+   111→    }
+   112→  }, []);
+   113→
+   114→  const handleLogin = async () => {
+   115→    setLoginLoading(true);
+   116→    setLoginError('');
+   117→    try {
+   118→      const res = await fetch('/api/auth/login', {
+   119→        method: 'POST',
+   120→        headers: { 'Content-Type': 'application/json' },
+   121→        body: JSON.stringify({ email, password }),
+   122→      });
+   123→      const data = await res.json();
+   124→      if (res.ok) {
+   125→        setToken(data.token);
+   126→        toast({ title: 'Logged in successfully', description: 'Welcome to the admin panel' });
+   127→        void fetchData();
+   128→      } else {
+   129→        setLoginError(data.error || 'Login failed');
+   130→      }
+   131→    } catch {
+   132→      setLoginError('Network error. Please try again.');
+   133→    }
+   134→    setLoginLoading(false);
+   135→  };
+   136→
+   137→  const handleSaveSettings = async () => {
+   138→    setLoading(true);
+   139→    try {
+   140→      const payload = { ...settings, aboutStats: JSON.stringify(aboutStats) };
+   141→      const res = await fetch('/api/settings', {
+   142→        method: 'PUT',
+   143→        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+   144→        body: JSON.stringify(payload),
+   145→      });
+   146→      if (res.ok) {
+   147→        toast({ title: 'Settings saved', description: 'Website settings updated successfully' });
+   148→      }
+   149→    } catch {
+   150→      toast({ title: 'Error', description: 'Failed to save settings', variant: 'destructive' });
+   151→    }
+   152→    setLoading(false);
+   153→  };
+   154→
+   155→  const handleSaveSlide = async () => {
+   156→    if (!editingSlide?.title || !editingSlide?.subtitle || !editingSlide?.imageUrl) {
+   157→      toast({ title: 'Error', description: 'Title, subtitle, and image URL are required', variant: 'destructive' });
+   158→      return;
+   159→    }
+   160→    setLoading(true);
+   161→    try {
+   162→      if (editingSlide.id) {
+   163→        const res = await fetch('/api/hero-slides', {
+   164→          method: 'PUT',
+   165→          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+   166→          body: JSON.stringify(editingSlide),
+   167→        });
+   168→        if (res.ok) toast({ title: 'Slide updated' });
+   169→      } else {
+   170→        const res = await fetch('/api/hero-slides', {
+   171→          method: 'POST',
+   172→          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+   173→          body: JSON.stringify(editingSlide),
+   174→        });
+   175→        if (res.ok) toast({ title: 'Slide created' });
+   176→      }
+   177→      setEditingSlide(null);
+   178→      setSlideFormOpen(false);
+   179→      fetchData();
+   180→    } catch {
+   181→      toast({ title: 'Error', description: 'Failed to save slide', variant: 'destructive' });
+   182→    }
+   183→    setLoading(false);
+   184→  };
+   185→
+   186→  const handleDeleteSlide = async (id: string) => {
+   187→    if (!confirm('Delete this slide?')) return;
+   188→    try {
+   189→      await fetch(`/api/hero-slides?id=${id}`, {
+   190→        method: 'DELETE',
+   191→        headers: { Authorization: `Bearer ${token}` },
+   192→      });
+   193→      toast({ title: 'Slide deleted' });
+   194→      fetchData();
+   195→    } catch {
+   196→      toast({ title: 'Error', description: 'Failed to delete slide', variant: 'destructive' });
+   197→    }
+   198→  };
+   199→
+   200→  const handleSaveService = async () => {
+   201→    if (!editingService?.title || !editingService?.description) {
+   202→      toast({ title: 'Error', description: 'Title and description are required', variant: 'destructive' });
+   203→      return;
+   204→    }
+   205→    setLoading(true);
+   206→    try {
+   207→      if (editingService.id) {
+   208→        const res = await fetch('/api/services', {
+   209→          method: 'PUT',
+   210→          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+   211→          body: JSON.stringify(editingService),
+   212→        });
+   213→        if (res.ok) toast({ title: 'Service updated' });
+   214→      } else {
+   215→        const res = await fetch('/api/services', {
+   216→          method: 'POST',
+   217→          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+   218→          body: JSON.stringify(editingService),
+   219→        });
+   220→        if (res.ok) toast({ title: 'Service created' });
+   221→      }
+   222→      setEditingService(null);
+   223→      setServiceFormOpen(false);
+   224→      fetchData();
+   225→    } catch {
+   226→      toast({ title: 'Error', description: 'Failed to save service', variant: 'destructive' });
+   227→    }
+   228→    setLoading(false);
+   229→  };
+   230→
+   231→  const handleDeleteService = async (id: string) => {
+   232→    if (!confirm('Delete this service?')) return;
+   233→    try {
+   234→      await fetch(`/api/services?id=${id}`, {
+   235→        method: 'DELETE',
+   236→        headers: { Authorization: `Bearer ${token}` },
+   237→      });
+   238→      toast({ title: 'Service deleted' });
+   239→      fetchData();
+   240→    } catch {
+   241→      toast({ title: 'Error', description: 'Failed to delete service', variant: 'destructive' });
+   242→    }
+   243→  };
+   244→
+   245→  const handleChangePassword = async () => {
+   246→    if (newPwd !== confirmPwd) {
+   247→      toast({ title: 'Error', description: 'New passwords do not match', variant: 'destructive' });
+   248→      return;
+   249→    }
+   250→    if (newPwd.length < 6) {
+   251→      toast({ title: 'Error', description: 'Password must be at least 6 characters', variant: 'destructive' });
+   252→      return;
+   253→    }
+   254→    setLoading(true);
+   255→    try {
+   256→      const res = await fetch('/api/auth/change-password', {
+   257→        method: 'POST',
+   258→        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+   259→        body: JSON.stringify({ currentPassword: currentPwd, newPassword: newPwd }),
+   260→      });
+   261→      const data = await res.json();
+   262→      if (res.ok) {
+   263→        toast({ title: 'Password changed', description: 'Your password has been updated' });
+   264→        setCurrentPwd('');
+   265→        setNewPwd('');
+   266→        setConfirmPwd('');
+   267→      } else {
+   268→        toast({ title: 'Error', description: data.error || 'Failed to change password', variant: 'destructive' });
+   269→      }
+   270→    } catch {
+   271→      toast({ title: 'Error', description: 'Network error', variant: 'destructive' });
+   272→    }
+   273→    setLoading(false);
+   274→  };
+   275→
+   276→  const handleLogout = () => {
+   277→    setToken(null);
+   278→    setEmail('');
+   279→    setPassword('');
+   280→    setActiveTab('settings');
+   281→  };
+   282→
+   283→  const handleClose = () => {
+   284→    onClose();
+   285→  };
+   286→
+   287→  if (!open) return null;
+   288→
+   289→  // LOGIN SCREEN
+   290→  if (!token) {
+   291→    return (
+   292→      <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+   293→        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+   294→          <div className="flex justify-between items-center mb-6">
+   295→            <h2 className="text-2xl font-bold text-slate-900">Admin Login</h2>
+   296→            <button onClick={handleClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+   297→              <X size={20} className="text-slate-500" />
+   298→            </button>
+   299→          </div>
+   300→
+   301→          {loginError && (
+   302→            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+   303→              {loginError}
+   304→            </div>
+   305→          )}
+   306→
+   307→          <div className="space-y-4">
+   308→            <div>
+   309→              <Label htmlFor="email">Email</Label>
+   310→              <Input
+   311→                id="email"
+   312→                type="email"
+   313→                placeholder="Enter your email"
+   314→                value={email}
+   315→                onChange={(e) => setEmail(e.target.value)}
+   316→                className="mt-1.5"
+   317→              />
+   318→            </div>
+   319→            <div>
+   320→              <Label htmlFor="password">Password</Label>
+   321→              <Input
+   322→                id="password"
+   323→                type="password"
+   324→                placeholder="Enter your password"
+   325→                value={password}
+   326→                onChange={(e) => setPassword(e.target.value)}
+   327→                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+   328→                className="mt-1.5"
+   329→              />
+   330→            </div>
+   331→            <Button
+   332→              onClick={handleLogin}
+   333→              disabled={loginLoading || !email || !password}
+   334→              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-11"
+   335→            >
+   336→              {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+   337→              Sign In
+   338→            </Button>
+   339→          </div>
+   340→        </div>
+   341→      </div>
+   342→    );
+   343→  }
+   344→
+   345→  // ADMIN DASHBOARD
+   346→  const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
+   347→    { key: 'settings', label: 'Site Settings', icon: <Settings size={18} /> },
+   348→    { key: 'slides', label: 'Hero Slides', icon: <ImageIcon size={18} /> },
+   349→    { key: 'services', label: 'Services', icon: <Layers size={18} /> },
+   350→    { key: 'password', label: 'Password', icon: <KeyRound size={18} /> },
+   351→  ];
+   352→
+   353→  return (
+   354→    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+   355→      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden">
+   356→        {/* Header */}
+   357→        <div className="flex items-center justify-between px-6 py-4 border-b">
+   358→          <div className="flex items-center gap-3">
+   359→            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900">
+   360→              <span className="text-sm font-bold text-white">A</span>
+   361→            </div>
+   362→            <h2 className="text-lg font-bold text-slate-900">Admin Panel</h2>
+   363→          </div>
+   364→          <div className="flex items-center gap-2">
+   365→            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-slate-500 hover:text-red-500">
+   366→              <LogOut size={16} className="mr-1.5" /> Logout
+   367→            </Button>
+   368→            <button onClick={handleClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+   369→              <X size={20} className="text-slate-500" />
+   370→            </button>
+   371→          </div>
+   372→        </div>
+   373→
+   374→        {/* Tabs */}
+   375→        <div className="flex border-b px-6 overflow-x-auto">
+   376→          {tabs.map((tab) => (
+   377→            <button
+   378→              key={tab.key}
+   379→              onClick={() => setActiveTab(tab.key)}
+   380→              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+   381→                activeTab === tab.key
+   382→                  ? 'border-emerald-500 text-emerald-600'
+   383→                  : 'border-transparent text-slate-500 hover:text-slate-700'
+   384→              }`}
+   385→            >
+   386→              {tab.icon} {tab.label}
+   387→            </button>
+   388→          ))}
+   389→        </div>
+   390→
+   391→        {/* Content */}
+   392→        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+   393→          {/* SETTINGS TAB */}
+   394→          {activeTab === 'settings' && (
+   395→            <div className="space-y-6 max-w-2xl">
+   396→              <h3 className="text-lg font-semibold text-slate-900">Site Settings</h3>
+   397→              <div className="space-y-4">
+   398→                <div>
+   399→                  <Label>Site Name</Label>
+   400→                  <Input
+   401→                    value={settings.siteName || ''}
+   402→                    onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
+   403→                    className="mt-1.5"
+   404→                  />
+   405→                </div>
+   406→                <div>
+   407→                  <Label>Tagline</Label>
+   408→                  <Input
+   409→                    value={settings.tagline || ''}
+   410→                    onChange={(e) => setSettings({ ...settings, tagline: e.target.value })}
+   411→                    className="mt-1.5"
+   412→                  />
+   413→                </div>
+   414→                <div>
+   415→                  <Label>WhatsApp Number</Label>
+   416→                  <Input
+   417→                    value={settings.whatsappNumber || ''}
+   418→                    onChange={(e) => setSettings({ ...settings, whatsappNumber: e.target.value })}
+   419→                    className="mt-1.5"
+   420→                    placeholder="+923237939393"
+   421→                  />
+   422→                </div>
+   423→                <div>
+   424→                  <Label>About Title</Label>
+   425→                  <Input
+   426→                    value={settings.aboutTitle || ''}
+   427→                    onChange={(e) => setSettings({ ...settings, aboutTitle: e.target.value })}
+   428→                    className="mt-1.5"
+   429→                  />
+   430→                </div>
+   431→                <div>
+   432→                  <Label>About Description</Label>
+   433→                  <Textarea
+   434→                    value={settings.aboutDescription || ''}
+   435→                    onChange={(e) => setSettings({ ...settings, aboutDescription: e.target.value })}
+   436→                    className="mt-1.5 min-h-[100px]"
+   437→                    rows={4}
+   438→                  />
+   439→                </div>
+   440→
+   441→                {/* Stats */}
+   442→                <div>
+   443→                  <div className="flex justify-between items-center mb-3">
+   444→                    <Label>Statistics</Label>
+   445→                    <Button
+   446→                      size="sm"
+   447→                      variant="outline"
+   448→                      onClick={() => setAboutStats([...aboutStats, { label: '', value: '' }])}
+   449→                      className="text-xs"
+   450→                    >
+   451→                      <Plus size={14} className="mr-1" /> Add Stat
+   452→                    </Button>
+   453→                  </div>
+   454→                  <div className="space-y-2">
+   455→                    {aboutStats.map((stat, i) => (
+   456→                      <div key={i} className="flex gap-2">
+   457→                        <Input
+   458→                          value={stat.label}
+   459→                          onChange={(e) => {
+   460→                            const newStats = [...aboutStats];
+   461→                            newStats[i] = { ...newStats[i], label: e.target.value };
+   462→                            setAboutStats(newStats);
+   463→                          }}
+   464→                          placeholder="Label"
+   465→                          className="flex-1"
+   466→                        />
+   467→                        <Input
+   468→                          value={stat.value}
+   469→                          onChange={(e) => {
+   470→                            const newStats = [...aboutStats];
+   471→                            newStats[i] = { ...newStats[i], value: e.target.value };
+   472→                            setAboutStats(newStats);
+   473→                          }}
+   474→                          placeholder="Value"
+   475→                          className="w-32"
+   476→                        />
+   477→                        <Button
+   478→                          size="icon"
+   479→                          variant="ghost"
+   480→                          onClick={() => setAboutStats(aboutStats.filter((_, idx) => idx !== i))}
+   481→                          className="text-red-400 hover:text-red-600 hover:bg-red-50 flex-shrink-0"
+   482→                        >
+   483→                          <Trash2 size={16} />
+   484→                        </Button>
+   485→                      </div>
+   486→                    ))}
+   487→                  </div>
+   488→                </div>
+   489→
+   490→                <div>
+   491→                  <Label>CTA Title</Label>
+   492→                  <Input
+   493→                    value={settings.ctaTitle || ''}
+   494→                    onChange={(e) => setSettings({ ...settings, ctaTitle: e.target.value })}
+   495→                    className="mt-1.5"
+   496→                  />
+   497→                </div>
+   498→                <div>
+   499→                  <Label>CTA Description</Label>
+   500→                  <Textarea
+   501→                    value={settings.ctaDescription || ''}
+   502→                    onChange={(e) => setSettings({ ...settings, ctaDescription: e.target.value })}
+   503→                    className="mt-1.5"
+   504→                    rows={3}
+   505→                  />
+   506→                </div>
+   507→                <div>
+   508→                  <Label>CTA Button Text</Label>
+   509→                  <Input
+   510→                    value={settings.ctaButtonText || ''}
+   511→                    onChange={(e) => setSettings({ ...settings, ctaButtonText: e.target.value })}
+   512→                    className="mt-1.5"
+   513→                  />
+   514→                </div>
+   515→              </div>
+   516→              <Button
+   517→                onClick={handleSaveSettings}
+   518→                disabled={loading}
+   519→                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
+   520→              >
+   521→                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+   522→                <Save size={16} className="mr-2" /> Save Settings
+   523→              </Button>
+   524→            </div>
+   525→          )}
+   526→
+   527→          {/* SLIDES TAB */}
+   528→          {activeTab === 'slides' && (
+   529→            <div className="space-y-6">
+   530→              <div className="flex justify-between items-center">
+   531→                <h3 className="text-lg font-semibold text-slate-900">Hero Slides</h3>
+   532→                <Button
+   533→                  onClick={() => {
+   534→                    setEditingSlide({ title: '', subtitle: '', imageUrl: '', ctaText: 'Get Started', ctaLink: '#contact', order: slides.length, active: true });
+   535→                    setSlideFormOpen(true);
+   536→                  }}
+   537→                  className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
+   538→                  size="sm"
+   539→                >
+   540→                  <Plus size={16} className="mr-1.5" /> Add Slide
+   541→                </Button>
+   542→              </div>
+   543→
+   544→              {slideFormOpen && editingSlide && (
+   545→                <div className="bg-slate-50 rounded-xl p-6 border">
+   546→                  <h4 className="font-semibold text-slate-900 mb-4">
+   547→                    {editingSlide.id ? 'Edit Slide' : 'New Slide'}
+   548→                  </h4>
+   549→                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   550→                    <div className="sm:col-span-2">
+   551→                      <Label>Title</Label>
+   552→                      <Input
+   553→                        value={editingSlide.title || ''}
+   554→                        onChange={(e) => setEditingSlide({ ...editingSlide, title: e.target.value })}
+   555→                        className="mt-1.5"
+   556→                      />
+   557→                    </div>
+   558→                    <div className="sm:col-span-2">
+   559→                      <Label>Subtitle</Label>
+   560→                      <Textarea
+   561→                        value={editingSlide.subtitle || ''}
+   562→                        onChange={(e) => setEditingSlide({ ...editingSlide, subtitle: e.target.value })}
+   563→                        className="mt-1.5"
+   564→                        rows={2}
+   565→                      />
+   566→                    </div>
+   567→                    <div className="sm:col-span-2">
+   568→                      <Label>Image URL</Label>
+   569→                      <Input
+   570→                        value={editingSlide.imageUrl || ''}
+   571→                        onChange={(e) => setEditingSlide({ ...editingSlide, imageUrl: e.target.value })}
+   572→                        className="mt-1.5"
+   573→                        placeholder="https://images.unsplash.com/..."
+   574→                      />
+   575→                    </div>
+   576→                    <div>
+   577→                      <Label>CTA Text</Label>
+   578→                      <Input
+   579→                        value={editingSlide.ctaText || ''}
+   580→                        onChange={(e) => setEditingSlide({ ...editingSlide, ctaText: e.target.value })}
+   581→                        className="mt-1.5"
+   582→                      />
+   583→                    </div>
+   584→                    <div>
+   585→                      <Label>CTA Link</Label>
+   586→                      <Input
+   587→                        value={editingSlide.ctaLink || ''}
+   588→                        onChange={(e) => setEditingSlide({ ...editingSlide, ctaLink: e.target.value })}
+   589→                        className="mt-1.5"
+   590→                      />
+   591→                    </div>
+   592→                    <div>
+   593→                      <Label>Order</Label>
+   594→                      <Input
+   595→                        type="number"
+   596→                        value={editingSlide.order || 0}
+   597→                        onChange={(e) => setEditingSlide({ ...editingSlide, order: parseInt(e.target.value) || 0 })}
+   598→                        className="mt-1.5"
+   599→                      />
+   600→                    </div>
+   601→                    <div className="flex items-end pb-1">
+   602→                      <div className="flex items-center gap-2">
+   603→                        <Switch
+   604→                          checked={editingSlide.active ?? true}
+   605→                          onCheckedChange={(checked) => setEditingSlide({ ...editingSlide, active: checked })}
+   606→                        />
+   607→                        <Label>Active</Label>
+   608→                      </div>
+   609→                    </div>
+   610→                  </div>
+   611→                  <div className="flex gap-2 mt-4">
+   612→                    <Button
+   613→                      onClick={handleSaveSlide}
+   614→                      disabled={loading}
+   615→                      className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
+   616→                      size="sm"
+   617→                    >
+   618→                      {loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+   619→                      Save
+   620→                    </Button>
+   621→                    <Button
+   622→                      variant="outline"
+   623→                      onClick={() => { setSlideFormOpen(false); setEditingSlide(null); }}
+   624→                      size="sm"
+   625→                    >
+   626→                      Cancel
+   627→                    </Button>
+   628→                  </div>
+   629→                </div>
+   630→              )}
+   631→
+   632→              <div className="space-y-3">
+   633→                {slides.map((slide) => (
+   634→                  <div key={slide.id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border">
+   635→                    <div className="w-20 h-14 rounded-lg overflow-hidden bg-slate-200 flex-shrink-0">
+   636→                      <img src={slide.imageUrl} alt={slide.title} className="w-full h-full object-cover" />
+   637→                    </div>
+   638→                    <div className="flex-1 min-w-0">
+   639→                      <p className="font-medium text-slate-900 truncate">{slide.title}</p>
+   640→                      <p className="text-sm text-slate-500 truncate">{slide.subtitle}</p>
+   641→                    </div>
+   642→                    <span className={`text-xs px-2 py-1 rounded-full ${slide.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>
+   643→                      {slide.active ? 'Active' : 'Inactive'}
+   644→                    </span>
+   645→                    <div className="flex gap-1 flex-shrink-0">
+   646→                      <Button
+   647→                        size="icon"
+   648→                        variant="ghost"
+   649→                        onClick={() => { setEditingSlide(slide); setSlideFormOpen(true); }}
+   650→                        className="h-8 w-8 text-slate-500 hover:text-emerald-600"
+   651→                      >
+   652→                        <Edit3 size={15} />
+   653→                      </Button>
+   654→                      <Button
+   655→                        size="icon"
+   656→                        variant="ghost"
+   657→                        onClick={() => handleDeleteSlide(slide.id)}
+   658→                        className="h-8 w-8 text-slate-500 hover:text-red-500"
+   659→                      >
+   660→                        <Trash2 size={15} />
+   661→                      </Button>
+   662→                    </div>
+   663→                  </div>
+   664→                ))}
+   665→                {slides.length === 0 && !slideFormOpen && (
+   666→                  <p className="text-center text-slate-400 py-8">No slides yet. Click &quot;Add Slide&quot; to create one.</p>
+   667→                )}
+   668→              </div>
+   669→            </div>
+   670→          )}
+   671→
+   672→          {/* SERVICES TAB */}
+   673→          {activeTab === 'services' && (
+   674→            <div className="space-y-6">
+   675→              <div className="flex justify-between items-center">
+   676→                <h3 className="text-lg font-semibold text-slate-900">Services</h3>
+   677→                <Button
+   678→                  onClick={() => {
+   679→                    setEditingService({ title: '', description: '', icon: 'TrendingUp', order: services.length, active: true });
+   680→                    setServiceFormOpen(true);
+   681→                  }}
+   682→                  className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
+   683→                  size="sm"
+   684→                >
+   685→                  <Plus size={16} className="mr-1.5" /> Add Service
+   686→                </Button>
+   687→              </div>
+   688→
+   689→              {serviceFormOpen && editingService && (
+   690→                <div className="bg-slate-50 rounded-xl p-6 border">
+   691→                  <h4 className="font-semibold text-slate-900 mb-4">
+   692→                    {editingService.id ? 'Edit Service' : 'New Service'}
+   693→                  </h4>
+   694→                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   695→                    <div className="sm:col-span-2">
+   696→                      <Label>Title</Label>
+   697→                      <Input
+   698→                        value={editingService.title || ''}
+   699→                        onChange={(e) => setEditingService({ ...editingService, title: e.target.value })}
+   700→                        className="mt-1.5"
+   701→                      />
+   702→                    </div>
+   703→                    <div className="sm:col-span-2">
+   704→                      <Label>Description</Label>
+   705→                      <Textarea
+   706→                        value={editingService.description || ''}
+   707→                        onChange={(e) => setEditingService({ ...editingService, description: e.target.value })}
+   708→                        className="mt-1.5"
+   709→                        rows={3}
+   710→                      />
+   711→                    </div>
+   712→                    <div>
+   713→                      <Label>Icon</Label>
+   714→                      <select
+   715→                        value={editingService.icon || 'TrendingUp'}
+   716→                        onChange={(e) => setEditingService({ ...editingService, icon: e.target.value })}
+   717→                        className="mt-1.5 w-full h-10 rounded-lg border border-input bg-white px-3 text-sm"
+   718→                      >
+   719→                        {Object.keys(iconMap).map((name) => (
+   720→                          <option key={name} value={name}>{name}</option>
+   721→                        ))}
+   722→                      </select>
+   723→                    </div>
+   724→                    <div>
+   725→                      <Label>Order</Label>
+   726→                      <Input
+   727→                        type="number"
+   728→                        value={editingService.order || 0}
+   729→                        onChange={(e) => setEditingService({ ...editingService, order: parseInt(e.target.value) || 0 })}
+   730→                        className="mt-1.5"
+   731→                      />
+   732→                    </div>
+   733→                    <div className="flex items-end pb-1">
+   734→                      <div className="flex items-center gap-2">
+   735→                        <Switch
+   736→                          checked={editingService.active ?? true}
+   737→                          onCheckedChange={(checked) => setEditingService({ ...editingService, active: checked })}
+   738→                        />
+   739→                        <Label>Active</Label>
+   740→                      </div>
+   741→                    </div>
+   742→                  </div>
+   743→                  <div className="flex gap-2 mt-4">
+   744→                    <Button
+   745→                      onClick={handleSaveService}
+   746→                      disabled={loading}
+   747→                      className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
+   748→                      size="sm"
+   749→                    >
+   750→                      {loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+   751→                      Save
+   752→                    </Button>
+   753→                    <Button
+   754→                      variant="outline"
+   755→                      onClick={() => { setServiceFormOpen(false); setEditingService(null); }}
+   756→                      size="sm"
+   757→                    >
+   758→                      Cancel
+   759→                    </Button>
+   760→                  </div>
+   761→                </div>
+   762→              )}
+   763→
+   764→              <div className="space-y-3">
+   765→                {services.map((service) => {
+   766→                  const IconComp = iconMap[service.icon] || TrendingUp;
+   767→                  return (
+   768→                    <div key={service.id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border">
+   769→                      <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+   770→                        <IconComp size={20} className="text-emerald-600" />
+   771→                      </div>
+   772→                      <div className="flex-1 min-w-0">
+   773→                        <p className="font-medium text-slate-900">{service.title}</p>
+   774→                        <p className="text-sm text-slate-500 truncate">{service.description}</p>
+   775→                      </div>
+   776→                      <span className={`text-xs px-2 py-1 rounded-full ${service.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>
+   777→                        {service.active ? 'Active' : 'Inactive'}
+   778→                      </span>
+   779→                      <div className="flex gap-1 flex-shrink-0">
+   780→                        <Button
+   781→                          size="icon"
+   782→                          variant="ghost"
+   783→                          onClick={() => { setEditingService(service); setServiceFormOpen(true); }}
+   784→                          className="h-8 w-8 text-slate-500 hover:text-emerald-600"
+   785→                        >
+   786→                          <Edit3 size={15} />
+   787→                        </Button>
+   788→                        <Button
+   789→                          size="icon"
+   790→                          variant="ghost"
+   791→                          onClick={() => handleDeleteService(service.id)}
+   792→                          className="h-8 w-8 text-slate-500 hover:text-red-500"
+   793→                        >
+   794→                          <Trash2 size={15} />
+   795→                        </Button>
+   796→                      </div>
+   797→                    </div>
+   798→                  );
+   799→                })}
+   800→                {services.length === 0 && !serviceFormOpen && (
+   801→                  <p className="text-center text-slate-400 py-8">No services yet. Click &quot;Add Service&quot; to create one.</p>
+   802→                )}
+   803→              </div>
+   804→            </div>
+   805→          )}
+   806→
+   807→          {/* PASSWORD TAB */}
+   808→          {activeTab === 'password' && (
+   809→            <div className="space-y-6 max-w-md">
+   810→              <h3 className="text-lg font-semibold text-slate-900">Change Password</h3>
+   811→              <div className="space-y-4">
+   812→                <div>
+   813→                  <Label>Current Password</Label>
+   814→                  <Input
+   815→                    type="password"
+   816→                    value={currentPwd}
+   817→                    onChange={(e) => setCurrentPwd(e.target.value)}
+   818→                    className="mt-1.5"
+   819→                  />
+   820→                </div>
+   821→                <div>
+   822→                  <Label>New Password</Label>
+   823→                  <Input
+   824→                    type="password"
+   825→                    value={newPwd}
+   826→                    onChange={(e) => setNewPwd(e.target.value)}
+   827→                    className="mt-1.5"
+   828→                    placeholder="Minimum 6 characters"
+   829→                  />
+   830→                </div>
+   831→                <div>
+   832→                  <Label>Confirm New Password</Label>
+   833→                  <Input
+   834→                    type="password"
+   835→                    value={confirmPwd}
+   836→                    onChange={(e) => setConfirmPwd(e.target.value)}
+   837→                    className="mt-1.5"
+   838→                    placeholder="Re-enter new password"
+   839→                  />
+   840→                </div>
+   841→              </div>
+   842→              <Button
+   843→                onClick={handleChangePassword}
+   844→                disabled={loading || !currentPwd || !newPwd || !confirmPwd}
+   845→                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
+   846→              >
+   847→                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+   848→                <KeyRound size={16} className="mr-2" /> Change Password
+   849→              </Button>
+   850→            </div>
+   851→          )}
+   852→        </div>
+   853→      </div>
+   854→    </div>
+   855→  );
+   856→}
