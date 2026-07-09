@@ -8,11 +8,12 @@ import TrustedPartners from '@/components/website/TrustedPartners';
 import ServicesSection from '@/components/website/ServicesSection';
 import AboutSection from '@/components/website/AboutSection';
 import CTASection from '@/components/website/CTASection';
+import SocialReels from '@/components/website/SocialReels';
 import Footer from '@/components/website/Footer';
 import WhatsAppButton from '@/components/website/WhatsAppButton';
 import AdminPanel from '@/components/admin/AdminPanel';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Star, ArrowRight, Play, Quote } from 'lucide-react';
+import { Star, ArrowRight, Quote } from 'lucide-react';
 
 interface Slide { id: string; title: string; subtitle: string; imageUrl: string; ctaText: string; ctaLink: string; }
 interface ServiceItem { id: string; title: string; description: string; icon: string; }
@@ -154,41 +155,15 @@ export default function Home() {
           </section>
         )}
 
-        {/* Watch Our Reels CTA Banner */}
-        <section className="py-16 sm:py-20 bg-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="relative rounded-3xl bg-gradient-to-r from-emerald-600 to-emerald-500 overflow-hidden">
-              {/* Background decoration */}
-              <div className="absolute inset-0">
-                <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-2xl" />
-                <div className="absolute bottom-0 left-0 w-72 h-72 bg-emerald-800/20 rounded-full translate-y-1/2 -translate-x-1/3 blur-2xl" />
-              </div>
-
-              <div className="relative z-10 px-6 sm:px-12 lg:px-16 py-12 sm:py-16 flex flex-col sm:flex-row items-center justify-between gap-8">
-                <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-                    <Play className="text-white" size={28} />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                      Watch Our Reels
-                    </h3>
-                    <p className="text-emerald-100 text-sm sm:text-base">
-                      Check out our latest creative work on social media
-                    </p>
-                  </div>
-                </div>
-                <Link
-                  href="/reels"
-                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-white text-emerald-700 font-semibold hover:bg-emerald-50 transition-colors flex-shrink-0"
-                >
-                  View Reels
-                  <ArrowRight size={16} />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* Reels Section */}
+        {data.reels.length > 0 && (
+          <SocialReels
+            reels={data.reels}
+            instagramUrl={settings?.instagramUrl || ''}
+            tiktokUrl={settings?.tiktokUrl || ''}
+            youtubeUrl={settings?.youtubeUrl || ''}
+          />
+        )}
 
         <CTASection
           title={settings?.ctaTitle || 'Ready to Transform Your Business?'}

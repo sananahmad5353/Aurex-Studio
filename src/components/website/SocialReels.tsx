@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { Instagram, Play, Youtube, X, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Instagram, Play, Youtube, ExternalLink } from 'lucide-react';
 
 interface ReelItem { id: string; platform: string; reelUrl: string; }
 
@@ -12,86 +11,90 @@ interface SocialReelsProps {
   youtubeUrl?: string;
 }
 
-function getEmbedUrl(reelUrl: string, platform: string): string {
-  if (platform === 'tiktok') {
-    const m = reelUrl.match(/video\/(\d+)/);
-    if (m) return `https://www.tiktok.com/embed/v2/${m[1]}`;
-    const m2 = reelUrl.match(/\/(\d{15,25})/);
-    if (m2) return `https://www.tiktok.com/embed/v2/${m2[1]}`;
-  }
-  if (platform === 'youtube') {
-    const sm = reelUrl.match(/\/shorts\/([a-zA-Z0-9_-]+)/);
-    if (sm) return `https://www.youtube.com/embed/${sm[1]}`;
-    const vm = reelUrl.match(/(?:v=|\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-    if (vm) return `https://www.youtube.com/embed/${vm[1]}`;
-  }
-  const rm = reelUrl.match(/\/(reel|p)\/([^/?]+)/);
-  if (rm) return `https://www.instagram.com/${rm[1]}/${rm[2]}/embed`;
-  return reelUrl;
-}
-
 const PLATFORM_CFG = {
   instagram: {
     label: 'Instagram Reels',
     gradient: 'from-pink-500 via-purple-500 to-orange-400',
+    cardGradient: 'from-pink-600 via-purple-600 to-orange-500',
     icon: <Instagram size={20} className="text-white" />,
     badge: 'bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600',
-    follow: 'hover:from-pink-500 hover:via-purple-500 hover:to-orange-400',
   },
   tiktok: {
     label: 'TikTok Reels',
     gradient: 'from-slate-800 via-slate-700 to-cyan-400',
-    icon: <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current text-white"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.46V13a8.28 8.28 0 005.58 2.16v-3.44a4.85 4.85 0 01-1-.1V6.69h1z"/></svg>,
+    cardGradient: 'from-slate-900 via-slate-800 to-cyan-500',
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current text-white">
+        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.46V13a8.28 8.28 0 005.58 2.16v-3.44a4.85 4.85 0 01-1-.1V6.69h1z"/>
+      </svg>
+    ),
     badge: 'bg-slate-900',
-    follow: 'hover:from-slate-800 hover:to-cyan-500',
   },
   youtube: {
     label: 'YouTube Shorts',
     gradient: 'from-red-500 via-red-600 to-red-700',
+    cardGradient: 'from-red-700 via-red-600 to-red-500',
     icon: <Youtube size={20} className="text-white" />,
     badge: 'bg-red-600',
-    follow: 'hover:from-red-500 hover:to-red-600',
   },
 } as const;
 
-function ReelCard({ reel, platform, index }: { reel: ReelItem; platform: string; index: number }) {
+function ThumbnailCard({ reel, platform, index }: { reel: ReelItem; platform: string; index: number }) {
   const cfg = PLATFORM_CFG[platform as keyof typeof PLATFORM_CFG] || PLATFORM_CFG.instagram;
-  const embedUrl = getEmbedUrl(reel.reelUrl, reel.platform);
 
   return (
-    <div className="flex-shrink-0 w-[220px] sm:w-[240px] snap-start group">
-      <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-xl hover:border-slate-300 transition-all duration-300">
-        {/* 9:16 embed card */}
-        <div className="relative w-full" style={{ paddingBottom: '150%' }}>
-          <iframe
-            src={embedUrl}
-            className="absolute inset-0 w-full h-full"
-            allowFullScreen
-            allow="autoplay; encrypted-media"
-            loading="lazy"
-            title={`${cfg.label} ${index + 1}`}
-            style={{ border: 'none' }}
-          />
-        </div>
-        {/* Card footer */}
-        <div className="px-3 py-2.5 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={`w-6 h-6 rounded-md ${cfg.badge} flex items-center justify-center`}>
+    <a
+      href={reel.reelUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex-shrink-0 w-[160px] sm:w-[180px] lg:w-[200px] snap-start group"
+    >
+      <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-xl hover:border-slate-300 hover:-translate-y-1 transition-all duration-300">
+        {/* Thumbnail area */}
+        <div className={`relative w-full aspect-[9/16] bg-gradient-to-br ${cfg.cardGradient} flex items-center justify-center overflow-hidden`}>
+          {/* Decorative circles */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full border-2 border-white" />
+            <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full border-2 border-white" />
+          </div>
+
+          {/* Platform icon watermark */}
+          <div className="absolute top-3 left-3">
+            <div className={`w-7 h-7 rounded-lg ${cfg.badge} flex items-center justify-center opacity-80`}>
               {cfg.icon}
             </div>
-            <span className="text-xs font-medium text-slate-500">Reel {index + 1}</span>
           </div>
-          <a
-            href={reel.reelUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-slate-400 hover:text-emerald-500 transition-colors"
-          >
-            <ExternalLink size={14} />
-          </a>
+
+          {/* Reel number */}
+          <div className="absolute top-3 right-3">
+            <span className="text-white/70 text-xs font-medium bg-black/20 px-2 py-0.5 rounded-full backdrop-blur-sm">
+              #{index + 1}
+            </span>
+          </div>
+
+          {/* Play button */}
+          <div className="relative z-10 w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/35 group-hover:scale-110 transition-all duration-300 border border-white/30">
+            <Play size={24} className="text-white ml-1" fill="white" />
+          </div>
+
+          {/* Bottom gradient */}
+          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/40 to-transparent" />
+
+          {/* Platform name at bottom */}
+          <div className="absolute bottom-3 left-3 right-3">
+            <p className="text-white text-xs font-semibold drop-shadow-lg capitalize">{platform}</p>
+          </div>
+        </div>
+
+        {/* Card footer */}
+        <div className="px-3 py-2.5 flex items-center justify-between">
+          <span className="text-xs font-medium text-slate-500">Reel {index + 1}</span>
+          <span className="text-slate-400 group-hover:text-emerald-500 transition-colors">
+            <ExternalLink size={13} />
+          </span>
         </div>
       </div>
-    </div>
+    </a>
   );
 }
 
@@ -104,29 +107,6 @@ function PlatformRow({
   reels: ReelItem[];
   profileUrl?: string;
 }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canLeft, setCanLeft] = useState(false);
-  const [canRight, setCanRight] = useState(true);
-
-  const checkScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanLeft(el.scrollLeft > 5);
-    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 5);
-  }, []);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    checkScroll();
-    el.addEventListener('scroll', checkScroll, { passive: true });
-    return () => el.removeEventListener('scroll', checkScroll);
-  }, [checkScroll, reels.length]);
-
-  const scroll = (dir: 'left' | 'right') => {
-    scrollRef.current?.scrollBy({ left: dir === 'left' ? -300 : 300, behavior: 'smooth' });
-  };
-
   if (!reels.length) return null;
   const cfg = PLATFORM_CFG[platform as keyof typeof PLATFORM_CFG] || PLATFORM_CFG.instagram;
 
@@ -134,7 +114,7 @@ function PlatformRow({
     <div className="mb-10 last:mb-0">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center shadow-lg`}>
+          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center shadow-lg`}>
             {cfg.icon}
           </div>
           <div>
@@ -142,37 +122,25 @@ function PlatformRow({
             <p className="text-xs text-slate-400">{reels.length} reels</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {profileUrl && (
-            <a
-              href={profileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold transition-all duration-300 ${cfg.follow} text-white`}
-            >
-              Follow Us
-            </a>
-          )}
-          {canLeft && (
-            <button onClick={() => scroll('left')} className="w-9 h-9 rounded-full bg-white border border-slate-200 hover:border-emerald-300 hover:shadow-md flex items-center justify-center transition-all" aria-label="Left">
-              <ChevronLeft size={16} className="text-slate-600" />
-            </button>
-          )}
-          {canRight && (
-            <button onClick={() => scroll('right')} className="w-9 h-9 rounded-full bg-white border border-slate-200 hover:border-emerald-300 hover:shadow-md flex items-center justify-center transition-all" aria-label="Right">
-              <ChevronRight size={16} className="text-slate-600" />
-            </button>
-          )}
-        </div>
+        {profileUrl && (
+          <a
+            href={profileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold hover:bg-slate-800 hover:text-white transition-all duration-300"
+          >
+            Follow Us
+            <ExternalLink size={12} />
+          </a>
+        )}
       </div>
 
-      <div
-        ref={scrollRef}
-        className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory"
+      {/* Reels row — no scrollbar, flex wrap on large screens */}
+      <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory lg:overflow-visible lg:flex-wrap lg:snap-none"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {reels.map((reel, idx) => (
-          <ReelCard key={reel.id} reel={reel} platform={platform} index={idx} />
+          <ThumbnailCard key={reel.id} reel={reel} platform={platform} index={idx} />
         ))}
       </div>
     </div>
