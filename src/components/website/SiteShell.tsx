@@ -20,7 +20,7 @@ const DEFAULT_DATA: SiteData = {
     tiktokUrl: '',
     youtubeUrl: '',
     logoUrl: '',
-    address: 'I-8 Markaz, Islamabad, Pakistan',
+    address: 'I8 Markaz Islamabad',
   },
   services: [],
 };

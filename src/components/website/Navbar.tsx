@@ -80,7 +80,7 @@ export default function Navbar({ siteName, logoUrl }: NavbarProps) {
             ))}
             <Button
               asChild
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 rounded-full"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-full font-semibold text-sm shadow-md"
             >
               <Link href="/contact">Get a Quote</Link>
             </Button>
@@ -115,7 +115,7 @@ export default function Navbar({ siteName, logoUrl }: NavbarProps) {
             <div className="px-6 pt-2">
               <Button
                 asChild
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold shadow-md"
               >
                 <Link href="/contact" onClick={() => setMobileOpen(false)}>Get a Quote</Link>
               </Button>

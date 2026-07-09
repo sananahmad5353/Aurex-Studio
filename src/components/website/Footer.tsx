@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { ShieldCheck, ArrowUp } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 
 interface FooterProps {
   siteName: string;
@@ -146,29 +145,22 @@ export default function Footer({ siteName, whatsappNumber, instagramUrl, tiktokU
             </ul>
           </div>
 
-          {/* Newsletter / Admin */}
+          {/* Admin - hidden */}
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-white mb-4">Admin Panel</h3>
-            <p className="text-slate-400 text-sm mb-4">
-              Authorized personnel can manage website content through the admin panel.
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-white mb-4">Legal</h3>
+            <p className="text-slate-500 text-xs mb-3">
+              &copy; {new Date().getFullYear()} {siteName}. All rights reserved.
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onAdminClick}
-              className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg"
-            >
-              <ShieldCheck className="w-4 h-4 mr-2" />
-              Admin Access
-            </Button>
+            <div className="flex gap-3">
+              <span className="text-slate-600 hover:text-slate-400 text-[10px] cursor-pointer transition-colors" onClick={onAdminClick}>
+                manage
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-slate-500 text-sm">
-            &copy; {new Date().getFullYear()} {siteName}. All rights reserved.
-          </p>
+        <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row justify-center items-center gap-4">
           <div className="flex items-center gap-4">
             <a href="#home" className="text-slate-500 hover:text-emerald-400 text-sm transition-colors">
               Privacy Policy

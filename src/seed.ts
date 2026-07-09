@@ -32,7 +32,7 @@ async function seed() {
     { key: 'metaKeywords', value: 'digital marketing agency Pakistan, performance marketing, brand growth strategy, lead generation, SEO services, social media marketing, e-commerce solutions, Islamabad marketing agency, Aurex Studio' },
     { key: 'ogImageUrl', value: '' },
     { key: 'logoUrl', value: '' },
-    { key: 'address', value: 'I-8 Markaz, Islamabad, Pakistan' },
+    { key: 'address', value: 'I8 Markaz Islamabad' },
     { key: 'ctaTitle', value: 'Ready to Transform Your Business?' },
     { key: 'ctaDescription', value: "Let's discuss how our digital marketing expertise can help you achieve your business goals and drive sustainable growth in Pakistan and beyond." },
     { key: 'ctaButtonText', value: 'Start Your Project' },

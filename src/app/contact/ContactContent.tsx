@@ -193,18 +193,18 @@ export default function ContactContent() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-6">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Find Us on Map</h2>
-            <p className="text-slate-500 text-sm mt-1">{address}</p>
+            <p className="text-slate-500 text-sm mt-1">I8 Markaz Islamabad</p>
           </div>
           <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
             <iframe
-              src="https://www.google.com/maps?q=I-8+Markaz+Islamabad+Pakistan&output=embed&z=15"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d5989.6223328178385!2d73.06605970215789!3d33.66665172066983!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x38df9544389abb3f%3A0x8ea6e9c4c6afe851!2sI-8%2C%20Islamabad%2C%20Pakistan!5e1!3m2!1sen!2s!4v1783575263251!5m2!1sen!2s"
               width="100%"
-              height="400"
+              height="450"
               style={{ border: 0 }}
               allowFullScreen
               loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Aurex Studio - I-8 Markaz, Islamabad"
+              referrerPolicy="strict-origin-when-cross-origin"
+              title="Aurex Studio - I8 Markaz Islamabad"
             />
           </div>
         </div>
