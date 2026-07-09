@@ -34,7 +34,7 @@ export default function Home() {
       .then((r) => r.json())
       .then((d) => setData(d))
       .catch(() => setData({
-        settings: { siteName: 'Aurex Studio', tagline: 'Elevate Your Digital Presence', whatsappNumber: '+923237939393', contactEmail: 'sananahmad5353@gmail.com', aboutTitle: 'About Aurex Studio', aboutDescription: '', aboutStats: '[]', ctaTitle: '', ctaDescription: '', ctaButtonText: '', instagramUrl: '', tiktokUrl: '', youtubeUrl: '' },
+        settings: { siteName: 'Aurex Studio', tagline: 'Elevate Your Digital Presence', whatsappNumber: '+923115139781', contactEmail: 'sananahmad5353@gmail.com', aboutTitle: 'About Aurex Studio', aboutDescription: '', aboutStats: '[]', ctaTitle: '', ctaDescription: '', ctaButtonText: '', instagramUrl: '', tiktokUrl: '', youtubeUrl: '' },
         slides: [], services: [], testimonials: [], partners: [], reels: [],
       }));
   }, []);
@@ -169,19 +169,20 @@ export default function Home() {
           title={settings?.ctaTitle || 'Ready to Transform Your Business?'}
           description={settings?.ctaDescription || ''}
           buttonText={settings?.ctaButtonText || 'Get Started'}
-          whatsappNumber={settings?.whatsappNumber || '+923237939393'}
+          whatsappNumber={settings?.whatsappNumber || '+923115139781'}
         />
       </main>
       <Footer
         siteName={settings?.siteName || 'Aurex Studio'}
-        whatsappNumber={settings?.whatsappNumber || '+923237939393'}
+        logoUrl={settings?.logoUrl || ''}
+        whatsappNumber={settings?.whatsappNumber || '+923115139781'}
         facebookUrl={settings?.facebookUrl || ''}
         instagramUrl={settings?.instagramUrl || ''}
         tiktokUrl={settings?.tiktokUrl || ''}
         youtubeUrl={settings?.youtubeUrl || ''}
         onAdminClick={() => setAdminOpen(true)}
       />
-      <WhatsAppButton number={settings?.whatsappNumber || '+923237939393'} />
+      <WhatsAppButton number={settings?.whatsappNumber || '+923115139781'} />
       <AdminPanel open={adminOpen} onClose={() => setAdminOpen(false)} />
     </div>
   );

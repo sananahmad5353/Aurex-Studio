@@ -79,7 +79,7 @@ export default function ReviewsContent() {
         title="Ready to Be Our Next Success Story?"
         description="Join hundreds of satisfied clients. Let's discuss how we can help your business thrive."
         buttonText="Contact Us Today"
-        whatsappNumber={s.whatsappNumber || '+923237939393'}
+        whatsappNumber={s.whatsappNumber || '+923115139781'}
       />
     </>
   );

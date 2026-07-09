@@ -12,7 +12,7 @@ export default function WhatsAppButton({ number }: WhatsAppButtonProps) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="whatsapp-btn fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg hover:bg-[#20BD5A] hover:scale-105 transition-transform"
+      className="whatsapp-btn fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#1e88e5] text-white shadow-lg hover:bg-[#1565c0] hover:scale-105 transition-transform"
       aria-label="Chat on WhatsApp"
     >
       <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">

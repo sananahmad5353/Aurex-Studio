@@ -76,7 +76,7 @@ export default function ServicesContent() {
         title={s.ctaTitle || 'Ready to Get Started?'}
         description={s.ctaDescription || 'Let us help you transform your business with our expert services.'}
         buttonText={s.ctaButtonText || 'Contact Us'}
-        whatsappNumber={s.whatsappNumber || '+923237939393'}
+        whatsappNumber={s.whatsappNumber || '+923115139781'}
       />
     </>
   );

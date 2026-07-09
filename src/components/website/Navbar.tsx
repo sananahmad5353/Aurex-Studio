@@ -52,10 +52,10 @@ export default function Navbar({ siteName, logoUrl }: NavbarProps) {
               <img
                 src={logoUrl}
                 alt={siteName}
-                className="h-9 w-9 rounded-lg object-contain"
+                className="h-10 sm:h-11 w-auto object-contain"
               />
             ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900">
+              <div className="flex h-10 sm:h-11 w-auto items-center justify-center rounded-lg bg-slate-900 px-2">
                 <span className="text-lg font-bold text-white">A</span>
               </div>
             )}

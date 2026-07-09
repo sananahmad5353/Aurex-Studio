@@ -5,6 +5,7 @@ import { ArrowUp } from 'lucide-react';
 
 interface FooterProps {
   siteName: string;
+  logoUrl?: string;
   whatsappNumber: string;
   instagramUrl?: string;
   facebookUrl?: string;
@@ -13,7 +14,7 @@ interface FooterProps {
   onAdminClick: () => void;
 }
 
-export default function Footer({ siteName, whatsappNumber, instagramUrl, facebookUrl, tiktokUrl, youtubeUrl, onAdminClick }: FooterProps) {
+export default function Footer({ siteName, logoUrl, whatsappNumber, instagramUrl, facebookUrl, tiktokUrl, youtubeUrl, onAdminClick }: FooterProps) {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
@@ -52,10 +53,14 @@ export default function Footer({ siteName, whatsappNumber, instagramUrl, faceboo
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500">
-                <span className="text-lg font-bold text-white">A</span>
-              </div>
+            <div className="flex items-center gap-2.5 mb-4">
+              {logoUrl ? (
+                <img src={logoUrl} alt={siteName} className="h-9 w-auto object-contain" />
+              ) : (
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500">
+                  <span className="text-lg font-bold text-white">A</span>
+                </div>
+              )}
               <span className="text-xl font-bold">{siteName}</span>
             </div>
             <p className="text-slate-400 text-sm leading-relaxed mb-6">

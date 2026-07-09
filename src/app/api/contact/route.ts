@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       db.siteSetting.findUnique({ where: { key: 'whatsappNumber' } }),
       db.siteSetting.findUnique({ where: { key: 'contactEmail' } }),
     ]);
-    const whatsappNumber = sanitizeString(whatsappSetting?.value || '+923237939393', 20);
+    const whatsappNumber = sanitizeString(whatsappSetting?.value || '+923115139781', 20);
     const contactEmail = sanitizeString(emailSetting?.value || 'sananahmad5353@gmail.com', 254);
 
     // Build WhatsApp message (values already sanitized above)

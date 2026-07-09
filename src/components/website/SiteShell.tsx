@@ -14,7 +14,7 @@ interface SiteData {
 const DEFAULT_DATA: SiteData = {
   settings: {
     siteName: 'Aurex Studio',
-    whatsappNumber: '+923237939393',
+    whatsappNumber: '+923115139781',
     contactEmail: 'sananahmad5353@gmail.com',
     facebookUrl: '',
     instagramUrl: '',
@@ -48,14 +48,15 @@ export default function SiteShell({ children }: { children: ReactNode }) {
       <main className="flex-1">{children}</main>
       <Footer
         siteName={s.siteName || 'Aurex Studio'}
-        whatsappNumber={s.whatsappNumber || '+923237939393'}
+        logoUrl={s.logoUrl || ''}
+        whatsappNumber={s.whatsappNumber || '+923115139781'}
         facebookUrl={s.facebookUrl || ''}
         instagramUrl={s.instagramUrl || ''}
         tiktokUrl={s.tiktokUrl || ''}
         youtubeUrl={s.youtubeUrl || ''}
         onAdminClick={() => setAdminOpen(true)}
       />
-      <WhatsAppButton number={s.whatsappNumber || '+923237939393'} />
+      <WhatsAppButton number={s.whatsappNumber || '+923115139781'} />
       <AdminPanel open={adminOpen} onClose={() => setAdminOpen(false)} />
     </div>
   );

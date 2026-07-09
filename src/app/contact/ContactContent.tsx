@@ -43,7 +43,7 @@ export default function ContactContent() {
   }
 
   const s = data.settings;
-  const whatsappNumber = s.whatsappNumber || '+923237939393';
+  const whatsappNumber = s.whatsappNumber || '+923115139781';
   const contactEmail = s.contactEmail || 'sananahmad5353@gmail.com';
   const address = s.address || 'I-8 Markaz, Islamabad, Pakistan';
   const facebookUrl = s.facebookUrl || '';

@@ -80,7 +80,7 @@ export default function ReelsContent() {
         title="Want Content Like This?"
         description="Let us create stunning visual content for your brand that captivates and converts."
         buttonText="Get in Touch"
-        whatsappNumber={s.whatsappNumber || '+923237939393'}
+        whatsappNumber={s.whatsappNumber || '+923115139781'}
       />
     </>
   );

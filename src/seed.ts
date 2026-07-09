@@ -13,7 +13,7 @@ async function seed() {
   const settings = [
     { key: 'siteName', value: 'Aurex Studio' },
     { key: 'tagline', value: 'Attention Into Action.' },
-    { key: 'whatsappNumber', value: '+923237939393' },
+    { key: 'whatsappNumber', value: '+923115139781' },
     { key: 'contactEmail', value: 'sananahmad5353@gmail.com' },
     { key: 'aboutTitle', value: 'About Aurex Studio' },
     { key: 'aboutDescription', value: 'We create powerful digital experiences through marketing, branding, and web development that help businesses grow. Helping businesses grow with smart marketing, creative branding, and high-converting websites.' },

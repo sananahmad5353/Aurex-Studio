@@ -169,9 +169,9 @@
 
 /* WhatsApp pulse animation */
 @keyframes whatsapp-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.5); }
-  70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(30, 136, 229, 0.5); }
+  70% { box-shadow: 0 0 0 15px rgba(30, 136, 229, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(30, 136, 229, 0); }
 }
 
 .whatsapp-btn {
