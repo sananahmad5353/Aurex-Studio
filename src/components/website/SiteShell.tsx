@@ -18,7 +18,6 @@ const DEFAULT_DATA: SiteData = {
     contactEmail: 'sananahmad5353@gmail.com',
     facebookUrl: '',
     instagramUrl: '',
-    tiktokUrl: '',
     logoUrl: '',
     address: 'I8 Markaz Islamabad',
   },
@@ -52,7 +51,6 @@ export default function SiteShell({ children }: { children: ReactNode }) {
         whatsappNumber={s.whatsappNumber || '+923115139781'}
         facebookUrl={s.facebookUrl || ''}
         instagramUrl={s.instagramUrl || ''}
-        tiktokUrl={s.tiktokUrl || ''}
         youtubeUrl={s.youtubeUrl || ''}
         onAdminClick={() => setAdminOpen(true)}
       />

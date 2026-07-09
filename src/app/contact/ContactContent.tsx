@@ -48,7 +48,6 @@ export default function ContactContent() {
   const address = s.address || 'I-8 Markaz, Islamabad, Pakistan';
   const facebookUrl = s.facebookUrl || '';
   const instagramUrl = s.instagramUrl || '';
-  const tiktokUrl = s.tiktokUrl || '';
   const youtubeUrl = s.youtubeUrl || '';
 
   return (
@@ -169,17 +168,6 @@ export default function ContactContent() {
                       aria-label="Instagram"
                     >
                       <Instagram size={18} />
-                    </a>
-                  )}
-                  {tiktokUrl && (
-                    <a
-                      href={tiktokUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white hover:opacity-80 transition-opacity"
-                      aria-label="TikTok"
-                    >
-                      <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.46V13a8.28 8.28 0 005.58 2.16v-3.44a4.85 4.85 0 01-1-.1V6.69h1z"/></svg>
                     </a>
                   )}
                   {youtubeUrl && (

@@ -1,45 +1,16 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Instagram, Play, Youtube, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Instagram, Play, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ReelItem { id: string; platform: string; reelUrl: string; }
 
 interface SocialReelsProps {
   reels: ReelItem[];
   instagramUrl?: string;
-  tiktokUrl?: string;
-  youtubeUrl?: string;
 }
 
-const PLATFORM_CFG = {
-  instagram: {
-    gradient: 'from-pink-500 via-purple-500 to-orange-400',
-    cardGradient: 'from-pink-600 via-purple-600 to-orange-500',
-    icon: <Instagram size={18} className="text-white" />,
-    badge: 'bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600',
-  },
-  tiktok: {
-    gradient: 'from-slate-800 via-slate-700 to-cyan-400',
-    cardGradient: 'from-slate-900 via-slate-800 to-cyan-500',
-    icon: (
-      <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] fill-current text-white">
-        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.46V13a8.28 8.28 0 005.58 2.16v-3.44a4.85 4.85 0 01-1-.1V6.69h1z"/>
-      </svg>
-    ),
-    badge: 'bg-slate-900',
-  },
-  youtube: {
-    gradient: 'from-red-500 via-red-600 to-red-700',
-    cardGradient: 'from-red-700 via-red-600 to-red-500',
-    icon: <Youtube size={18} className="text-white" />,
-    badge: 'bg-red-600',
-  },
-} as const;
-
-function ThumbnailCard({ reel, platform, index }: { reel: ReelItem; platform: string; index: number }) {
-  const cfg = PLATFORM_CFG[platform as keyof typeof PLATFORM_CFG] || PLATFORM_CFG.instagram;
-
+function ThumbnailCard({ reel, index }: { reel: ReelItem; index: number }) {
   return (
     <a
       href={reel.reelUrl}
@@ -48,8 +19,7 @@ function ThumbnailCard({ reel, platform, index }: { reel: ReelItem; platform: st
       className="flex-shrink-0 w-[155px] sm:w-[175px] lg:w-[195px] snap-start group"
     >
       <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-xl hover:border-slate-300 hover:-translate-y-1 transition-all duration-300">
-        {/* Thumbnail area */}
-        <div className={`relative w-full aspect-[9/16] bg-gradient-to-br ${cfg.cardGradient} flex items-center justify-center overflow-hidden`}>
+        <div className="relative w-full aspect-[9/16] bg-gradient-to-br from-pink-600 via-purple-600 to-orange-500 flex items-center justify-center overflow-hidden">
           {/* Decorative circles */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full border-2 border-white" />
@@ -58,8 +28,8 @@ function ThumbnailCard({ reel, platform, index }: { reel: ReelItem; platform: st
 
           {/* Platform icon badge */}
           <div className="absolute top-2.5 left-2.5">
-            <div className={`w-6 h-6 rounded-md ${cfg.badge} flex items-center justify-center opacity-80`}>
-              {cfg.icon}
+            <div className="w-6 h-6 rounded-md bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600 flex items-center justify-center opacity-80">
+              <Instagram size={14} className="text-white" />
             </div>
           </div>
 
@@ -77,14 +47,11 @@ function ThumbnailCard({ reel, platform, index }: { reel: ReelItem; platform: st
 
           {/* Bottom gradient */}
           <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/40 to-transparent" />
-
-          {/* Platform name at bottom */}
-          <div className="absolute bottom-2.5 left-2.5 right-2.5">
-            <p className="text-white text-[11px] font-semibold drop-shadow-lg capitalize">{platform}</p>
+          <div className="absolute bottom-2.5 left-2.5">
+            <p className="text-white text-[11px] font-semibold drop-shadow-lg">Reel</p>
           </div>
         </div>
 
-        {/* Card footer */}
         <div className="px-3 py-2 flex items-center justify-between">
           <span className="text-[11px] font-medium text-slate-500">Reel {index + 1}</span>
           <span className="text-slate-400 group-hover:text-emerald-500 transition-colors">
@@ -96,7 +63,7 @@ function ThumbnailCard({ reel, platform, index }: { reel: ReelItem; platform: st
   );
 }
 
-export default function SocialReels({ reels, instagramUrl, tiktokUrl, youtubeUrl }: SocialReelsProps) {
+export default function SocialReels({ reels, instagramUrl }: SocialReelsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -139,79 +106,46 @@ export default function SocialReels({ reels, instagramUrl, tiktokUrl, youtubeUrl
               Our Work
             </span>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-2">
-              Reels &amp; Content
+              Instagram Reels
             </h2>
             <p className="text-base sm:text-lg text-slate-500 max-w-xl">
-              Watch our latest creative work across social media platforms.
+              Watch our latest creative reels and short-form content.
             </p>
           </div>
-          {/* Slider arrows */}
           <div className="hidden sm:flex items-center gap-2">
-            <button
-              onClick={() => scroll('left')}
-              disabled={!canScrollLeft}
+            <button onClick={() => scroll('left')} disabled={!canScrollLeft}
               className="p-2.5 rounded-full border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              aria-label="Scroll left"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <button
-              onClick={() => scroll('right')}
-              disabled={!canScrollRight}
+              aria-label="Scroll left"><ChevronLeft size={20} /></button>
+            <button onClick={() => scroll('right')} disabled={!canScrollRight}
               className="p-2.5 rounded-full border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              aria-label="Scroll right"
-            >
-              <ChevronRight size={20} />
-            </button>
+              aria-label="Scroll right"><ChevronRight size={20} /></button>
           </div>
         </div>
 
-        {/* Single row slider — all reels together */}
+        {/* Single row slider */}
         <div className="relative group/slider">
-          {/* Left fade */}
-          {canScrollLeft && (
-            <div className="hidden lg:block absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-          )}
-          {/* Right fade */}
-          {canScrollRight && (
-            <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
-          )}
-
+          {canScrollLeft && <div className="hidden lg:block absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />}
+          {canScrollRight && <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />}
           <div
             ref={scrollRef}
             className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory hide-scrollbar"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {reels.map((reel, idx) => (
-              <ThumbnailCard key={reel.id} reel={reel} platform={reel.platform} index={idx} />
+              <ThumbnailCard key={reel.id} reel={reel} index={idx} />
             ))}
           </div>
         </div>
 
-        {/* Follow buttons */}
-        <div className="text-center mt-10">
-          <p className="text-sm text-slate-400 mb-3">Follow us for more content</p>
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            {instagramUrl && (
-              <a href={instagramUrl} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-slate-100 hover:bg-gradient-to-tr hover:from-amber-500 hover:via-pink-500 hover:to-purple-600 text-slate-600 hover:text-white text-sm font-medium transition-all duration-300">
-                <Instagram size={16} /> Instagram
-              </a>
-            )}
-            {tiktokUrl && (
-              <a href={tiktokUrl} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-slate-100 hover:bg-slate-900 text-slate-600 hover:text-white text-sm font-medium transition-all duration-300">
-                <Play size={16} /> TikTok
-              </a>
-            )}
-            {youtubeUrl && (
-              <a href={youtubeUrl} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-white text-sm font-medium transition-all duration-300">
-                <Youtube size={16} /> YouTube
-              </a>
-            )}
+        {/* Follow button */}
+        {instagramUrl && (
+          <div className="text-center mt-10">
+            <a href={instagramUrl} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-colors">
+              <Instagram size={18} /> Follow @aurexstudio_pk
+            </a>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );

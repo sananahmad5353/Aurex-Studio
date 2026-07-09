@@ -26,7 +26,6 @@ async function seed() {
     ]) },
     { key: 'instagramUrl', value: 'https://www.instagram.com/aurexstudio_pk/' },
     { key: 'facebookUrl', value: 'https://www.facebook.com/profile.php?id=61590629273627' },
-    { key: 'tiktokUrl', value: 'https://www.tiktok.com/@engr.usman80' },
     { key: 'youtubeUrl', value: '' },
     { key: 'metaTitle', value: 'Aurex Studio | Attention Into Action.' },
     { key: 'metaDescription', value: 'We create powerful digital experiences through marketing, branding, and web development that help businesses grow. Smart marketing, creative branding, and high-converting websites.' },
@@ -37,16 +36,24 @@ async function seed() {
     { key: 'ctaTitle', value: 'Ready to Transform Your Business?' },
     { key: 'ctaDescription', value: "Let's discuss how our digital marketing expertise can help you achieve your business goals and drive sustainable growth in Pakistan and beyond." },
     { key: 'ctaButtonText', value: 'Start Your Project' },
+    // Section visibility (all shown by default)
+    { key: 'showHero', value: 'true' },
+    { key: 'showPartners', value: 'true' },
+    { key: 'showServices', value: 'true' },
+    { key: 'showAbout', value: 'true' },
+    { key: 'showReviews', value: 'true' },
+    { key: 'showReels', value: 'true' },
+    { key: 'showPosts', value: 'true' },
+    { key: 'showCTA', value: 'true' },
   ];
   for (const s of settings) {
     await db.siteSetting.upsert({ where: { key: s.key }, update: { value: s.value }, create: s });
   }
 
-  // Delete old hero slides and re-create with new images
+  // Delete old hero slides and re-create
   const oldSlides = await db.heroSlide.findMany();
   if (oldSlides.length > 0) {
-    const slideIds = oldSlides.map(s => s.id);
-    await db.heroSlide.deleteMany({ where: { id: { in: slideIds } } });
+    await db.heroSlide.deleteMany({ where: { id: { in: oldSlides.map(s => s.id) } } });
   }
   await db.heroSlide.createMany({
     data: [
@@ -56,9 +63,9 @@ async function seed() {
       { title: 'Data-Driven Growth for Pakistani Businesses', subtitle: 'Our automated lead generation systems capture, qualify, and nurture prospects into loyal customers, built for the local business landscape.', imageUrl: 'https://sfile.chatglm.cn/images-ppt/31a050861591.png', ctaText: 'See How It Works', ctaLink: '#services', order: 3 },
     ],
   });
-  console.log('Hero slides updated with new images');
+  console.log('Hero slides updated');
 
-  // Delete old testimonials and re-create with Pakistani clients
+  // Delete old testimonials and re-create
   const oldTestimonials = await db.testimonial.findMany();
   if (oldTestimonials.length > 0) {
     await db.testimonial.deleteMany({ where: { id: { in: oldTestimonials.map(t => t.id) } } });
@@ -73,32 +80,47 @@ async function seed() {
       { name: 'Zainab Raza', role: 'E-commerce Manager', company: 'PakCart Lahore', content: 'Aurex Studio helped us build an automated lead generation system that delivers consistent inquiries daily. Their knowledge of the Pakistani digital landscape and consumer trends gave us a real competitive edge.', rating: 4, order: 5 },
     ],
   });
-  console.log('Testimonials updated with Pakistani clients');
+  console.log('Testimonials updated');
 
-  // Delete old reels and re-create (6 Instagram + 6 TikTok)
+  // Delete old reels and re-create (Instagram only)
   const oldReels = await db.reel.findMany();
   if (oldReels.length > 0) {
     await db.reel.deleteMany({ where: { id: { in: oldReels.map(r => r.id) } } });
   }
   await db.reel.createMany({
     data: [
-      // Instagram Reels (6) - from @engr.usman93
       { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/DCGFKJXvhPR/', order: 0 },
       { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/DB9_cPjR5uM/', order: 1 },
       { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/DA3jQJxRWBU/', order: 2 },
       { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/C_3snQARWLK/', order: 3 },
       { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/C-zmJ0vRL7W/', order: 4 },
       { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/C-xVnZ7Rqt4/', order: 5 },
-      // TikTok Reels (6) - from @engr.usman80
-      { platform: 'tiktok', reelUrl: 'https://www.tiktok.com/@engr.usman80/video/7504904839399875365/', order: 6 },
-      { platform: 'tiktok', reelUrl: 'https://www.tiktok.com/@engr.usman80/video/7494886233939078431/', order: 7 },
-      { platform: 'tiktok', reelUrl: 'https://www.tiktok.com/@engr.usman80/video/7484903827746978621/', order: 8 },
-      { platform: 'tiktok', reelUrl: 'https://www.tiktok.com/@engr.usman80/video/7475021948818470725/', order: 9 },
-      { platform: 'tiktok', reelUrl: 'https://www.tiktok.com/@engr.usman80/video/7465012345678901234/', order: 10 },
-      { platform: 'tiktok', reelUrl: 'https://www.tiktok.com/@engr.usman80/video/7455001234567890123/', order: 11 },
     ],
   });
-  console.log('12 reels created (6 Instagram + 6 TikTok)');
+  console.log('6 Instagram reels created');
+
+  // Delete old posts and re-create sample posts
+  const oldPosts = await db.instagramPost.findMany();
+  if (oldPosts.length > 0) {
+    await db.instagramPost.deleteMany({ where: { id: { in: oldPosts.map(p => p.id) } } });
+  }
+  await db.instagramPost.createMany({
+    data: [
+      { postUrl: 'https://www.instagram.com/p/DGJqKvdS7WH/', imageUrl: '', caption: 'Digital marketing strategies that deliver results', order: 0 },
+      { postUrl: 'https://www.instagram.com/p/DGFxTjYyQ_V/', imageUrl: '', caption: 'Brand identity design for Pakistani startups', order: 1 },
+      { postUrl: 'https://www.instagram.com/p/DE_5HXjS-nQ/', imageUrl: '', caption: 'Behind the scenes at Aurex Studio', order: 2 },
+      { postUrl: 'https://www.instagram.com/p/DEtS_BxSlRC/', imageUrl: '', caption: 'Performance marketing tips for 2025', order: 3 },
+      { postUrl: 'https://www.instagram.com/p/DDnNfJxSCqZ/', imageUrl: '', caption: 'Client success story: 300% lead increase', order: 4 },
+      { postUrl: 'https://www.instagram.com/p/DDYzJiQSFep/', imageUrl: '', caption: 'Social media content that converts', order: 5 },
+      { postUrl: 'https://www.instagram.com/p/DC1FLUwSMhD/', imageUrl: '', caption: 'E-commerce growth strategies', order: 6 },
+      { postUrl: 'https://www.instagram.com/p/DBvqRWJSjZH/', imageUrl: '', caption: 'The power of consistent branding', order: 7 },
+      { postUrl: 'https://www.instagram.com/p/DBXW_kTiSaz/', imageUrl: '', caption: 'SEO tips for local businesses', order: 8 },
+      { postUrl: 'https://www.instagram.com/p/DA6LZ0GSNCV/', imageUrl: '', caption: 'Creative campaign showcase', order: 9 },
+      { postUrl: 'https://www.instagram.com/p/DAmTaYuSNCa/', imageUrl: '', caption: 'Team working on client projects', order: 10 },
+      { postUrl: 'https://www.instagram.com/p/DAbMoWQitNC/', imageUrl: '', caption: 'Website design process revealed', order: 11 },
+    ],
+  });
+  console.log('12 Instagram posts created');
 
   // Delete old partners and re-create
   const oldPartners = await db.partner.findMany();
@@ -112,10 +134,10 @@ async function seed() {
       { name: 'Shopify', imageUrl: 'https://logo.clearbit.com/shopify.com', website: 'https://www.shopify.com', order: 2 },
       { name: 'HubSpot', imageUrl: 'https://logo.clearbit.com/hubspot.com', website: 'https://www.hubspot.com', order: 3 },
       { name: 'WordPress', imageUrl: 'https://logo.clearbit.com/wordpress.com', website: 'https://wordpress.com', order: 4 },
-      { name: 'TikTok Ads', imageUrl: 'https://logo.clearbit.com/tiktok.com', website: 'https://ads.tiktok.com', order: 5 },
+      { name: 'YouTube', imageUrl: 'https://logo.clearbit.com/youtube.com', website: 'https://www.youtube.com', order: 5 },
     ],
   });
-  console.log('Partners created with proper brand logos');
+  console.log('Partners created');
 
   // Delete old services and re-create
   const oldServices = await db.service.findMany();
@@ -125,11 +147,11 @@ async function seed() {
   await db.service.createMany({
     data: [
       { title: 'Digital Marketing Strategy', description: 'Comprehensive digital marketing strategies tailored for Pakistani businesses. We analyze your market, competitors, and audience to create data-driven plans that deliver measurable growth and ROI across all digital channels.', icon: 'Target', order: 0 },
-      { title: 'Performance Marketing', description: 'Maximize your ad spend with expertly managed Google Ads, Facebook Ads, and TikTok campaigns. Our performance marketing team optimizes every rupee for maximum conversions and lowest cost per acquisition.', icon: 'BarChart3', order: 1 },
+      { title: 'Performance Marketing', description: 'Maximize your ad spend with expertly managed Google Ads, Facebook Ads, and Instagram campaigns. Our performance marketing team optimizes every rupee for maximum conversions and lowest cost per acquisition.', icon: 'BarChart3', order: 1 },
       { title: 'Business Development', description: 'Strategic business development services that help you identify new market opportunities, build strategic partnerships, and create sustainable revenue streams in the Pakistani and regional markets.', icon: 'Rocket', order: 2 },
       { title: 'Brand Growth Strategy', description: 'Build a powerful brand that dominates your market. From brand identity design to positioning strategy, we create brands that resonate with your target audience and drive long-term loyalty.', icon: 'TrendingUp', order: 3 },
       { title: 'Lead Generation', description: 'Automated lead generation systems that capture, qualify, and nurture prospects into loyal customers. Our proven funnels deliver consistent, high-quality leads for your sales team.', icon: 'Users', order: 4 },
-      { title: 'Social Media Marketing', description: 'Engage your audience with compelling social media content and campaigns. We manage your presence across Instagram, Facebook, TikTok, and YouTube to build community and drive brand awareness.', icon: 'Megaphone', order: 5 },
+      { title: 'Social Media Marketing', description: 'Engage your audience with compelling social media content and campaigns. We manage your presence across Instagram, Facebook, and YouTube to build community and drive brand awareness.', icon: 'Megaphone', order: 5 },
       { title: 'SEO & Content Marketing', description: 'Rank higher on Google with our SEO and content marketing services. We create optimized content that attracts organic traffic, builds authority, and converts visitors into customers.', icon: 'Search', order: 6 },
       { title: 'E-commerce Solutions', description: 'Complete e-commerce solutions from store setup to conversion optimization. We help you sell more online with optimized product listings, checkout flows, and targeted advertising campaigns.', icon: 'Globe', order: 7 },
     ],

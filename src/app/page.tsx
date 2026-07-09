@@ -44,6 +44,7 @@ export default function Home() {
   const services = data?.services || [];
   const testimonials = data?.testimonials || [];
   const partners = data?.partners || [];
+  const reels = data?.reels || [];
 
   let aboutStats: { label: string; value: string }[] = [];
   let aboutImages: string[] = [];
@@ -156,9 +157,9 @@ export default function Home() {
         )}
 
         {/* Reels Section */}
-        {data.reels.length > 0 && (
+        {reels.length > 0 && (
           <SocialReels
-            reels={data.reels}
+            reels={reels}
             instagramUrl={settings?.instagramUrl || ''}
             tiktokUrl={settings?.tiktokUrl || ''}
             youtubeUrl={settings?.youtubeUrl || ''}

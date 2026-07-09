@@ -51,10 +51,10 @@ export default function ReelsContent() {
         <div className="absolute inset-0 bg-black/20" />
         <div className="relative z-10 text-center px-4">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-            Reels &amp; Content
+            Instagram Reels
           </h1>
           <p className="text-emerald-100 text-lg max-w-2xl mx-auto mb-6">
-            Watch our latest creative work, behind-the-scenes, and trending content across platforms
+            Watch our latest creative work and trending short-form content
           </p>
           <nav aria-label="Breadcrumb" className="flex items-center justify-center gap-2 text-sm text-emerald-200">
             <Link href="/" className="flex items-center gap-1 hover:text-white transition-colors">
@@ -71,8 +71,6 @@ export default function ReelsContent() {
       <SocialReels
         reels={data.reels}
         instagramUrl={s.instagramUrl || ''}
-        tiktokUrl={s.tiktokUrl || ''}
-        youtubeUrl={s.youtubeUrl || ''}
       />
 
       {/* CTA */}

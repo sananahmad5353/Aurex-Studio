@@ -98,3 +98,14 @@ model Reel {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model InstagramPost {
+  id        String   @id @default(cuid())
+  postUrl   String
+  imageUrl  String   @default("")
+  caption   String   @default("")
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
