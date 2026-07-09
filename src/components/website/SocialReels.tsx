@@ -1,6 +1,7 @@
 'use client';
 
-import { Instagram, Play, Youtube, ExternalLink } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { Instagram, Play, Youtube, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ReelItem { id: string; platform: string; reelUrl: string; }
 
@@ -13,28 +14,25 @@ interface SocialReelsProps {
 
 const PLATFORM_CFG = {
   instagram: {
-    label: 'Instagram Reels',
     gradient: 'from-pink-500 via-purple-500 to-orange-400',
     cardGradient: 'from-pink-600 via-purple-600 to-orange-500',
-    icon: <Instagram size={20} className="text-white" />,
+    icon: <Instagram size={18} className="text-white" />,
     badge: 'bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600',
   },
   tiktok: {
-    label: 'TikTok Reels',
     gradient: 'from-slate-800 via-slate-700 to-cyan-400',
     cardGradient: 'from-slate-900 via-slate-800 to-cyan-500',
     icon: (
-      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current text-white">
+      <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] fill-current text-white">
         <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.46V13a8.28 8.28 0 005.58 2.16v-3.44a4.85 4.85 0 01-1-.1V6.69h1z"/>
       </svg>
     ),
     badge: 'bg-slate-900',
   },
   youtube: {
-    label: 'YouTube Shorts',
     gradient: 'from-red-500 via-red-600 to-red-700',
     cardGradient: 'from-red-700 via-red-600 to-red-500',
-    icon: <Youtube size={20} className="text-white" />,
+    icon: <Youtube size={18} className="text-white" />,
     badge: 'bg-red-600',
   },
 } as const;
@@ -47,7 +45,7 @@ function ThumbnailCard({ reel, platform, index }: { reel: ReelItem; platform: st
       href={reel.reelUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex-shrink-0 w-[160px] sm:w-[180px] lg:w-[200px] snap-start group"
+      className="flex-shrink-0 w-[155px] sm:w-[175px] lg:w-[195px] snap-start group"
     >
       <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-xl hover:border-slate-300 hover:-translate-y-1 transition-all duration-300">
         {/* Thumbnail area */}
@@ -58,39 +56,39 @@ function ThumbnailCard({ reel, platform, index }: { reel: ReelItem; platform: st
             <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full border-2 border-white" />
           </div>
 
-          {/* Platform icon watermark */}
-          <div className="absolute top-3 left-3">
-            <div className={`w-7 h-7 rounded-lg ${cfg.badge} flex items-center justify-center opacity-80`}>
+          {/* Platform icon badge */}
+          <div className="absolute top-2.5 left-2.5">
+            <div className={`w-6 h-6 rounded-md ${cfg.badge} flex items-center justify-center opacity-80`}>
               {cfg.icon}
             </div>
           </div>
 
           {/* Reel number */}
-          <div className="absolute top-3 right-3">
-            <span className="text-white/70 text-xs font-medium bg-black/20 px-2 py-0.5 rounded-full backdrop-blur-sm">
+          <div className="absolute top-2.5 right-2.5">
+            <span className="text-white/70 text-[10px] font-medium bg-black/20 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
               #{index + 1}
             </span>
           </div>
 
           {/* Play button */}
-          <div className="relative z-10 w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/35 group-hover:scale-110 transition-all duration-300 border border-white/30">
-            <Play size={24} className="text-white ml-1" fill="white" />
+          <div className="relative z-10 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/35 group-hover:scale-110 transition-all duration-300 border border-white/30">
+            <Play size={20} className="text-white ml-0.5" fill="white" />
           </div>
 
           {/* Bottom gradient */}
-          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/40 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/40 to-transparent" />
 
           {/* Platform name at bottom */}
-          <div className="absolute bottom-3 left-3 right-3">
-            <p className="text-white text-xs font-semibold drop-shadow-lg capitalize">{platform}</p>
+          <div className="absolute bottom-2.5 left-2.5 right-2.5">
+            <p className="text-white text-[11px] font-semibold drop-shadow-lg capitalize">{platform}</p>
           </div>
         </div>
 
         {/* Card footer */}
-        <div className="px-3 py-2.5 flex items-center justify-between">
-          <span className="text-xs font-medium text-slate-500">Reel {index + 1}</span>
+        <div className="px-3 py-2 flex items-center justify-between">
+          <span className="text-[11px] font-medium text-slate-500">Reel {index + 1}</span>
           <span className="text-slate-400 group-hover:text-emerald-500 transition-colors">
-            <ExternalLink size={13} />
+            <ExternalLink size={12} />
           </span>
         </div>
       </div>
@@ -98,89 +96,99 @@ function ThumbnailCard({ reel, platform, index }: { reel: ReelItem; platform: st
   );
 }
 
-function PlatformRow({
-  platform,
-  reels,
-  profileUrl,
-}: {
-  platform: string;
-  reels: ReelItem[];
-  profileUrl?: string;
-}) {
-  if (!reels.length) return null;
-  const cfg = PLATFORM_CFG[platform as keyof typeof PLATFORM_CFG] || PLATFORM_CFG.instagram;
-
-  return (
-    <div className="mb-10 last:mb-0">
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center shadow-lg`}>
-            {cfg.icon}
-          </div>
-          <div>
-            <h3 className="text-lg sm:text-xl font-bold text-slate-900">{cfg.label}</h3>
-            <p className="text-xs text-slate-400">{reels.length} reels</p>
-          </div>
-        </div>
-        {profileUrl && (
-          <a
-            href={profileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold hover:bg-slate-800 hover:text-white transition-all duration-300"
-          >
-            Follow Us
-            <ExternalLink size={12} />
-          </a>
-        )}
-      </div>
-
-      {/* Reels row — no scrollbar, flex wrap on large screens */}
-      <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory lg:overflow-visible lg:flex-wrap lg:snap-none"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        {reels.map((reel, idx) => (
-          <ThumbnailCard key={reel.id} reel={reel} platform={platform} index={idx} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function SocialReels({ reels, instagramUrl, tiktokUrl, youtubeUrl }: SocialReelsProps) {
-  if (!reels.length) return null;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
-  const grouped: Record<string, ReelItem[]> = {};
-  for (const r of reels) {
-    if (!grouped[r.platform]) grouped[r.platform] = [];
-    grouped[r.platform].push(r);
-  }
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    window.addEventListener('resize', checkScroll, { passive: true });
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [checkScroll, reels.length]);
+
+  const scroll = (dir: 'left' | 'right') => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const amount = el.clientWidth * 0.75;
+    el.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
+  };
+
+  if (!reels.length) return null;
 
   return (
     <section className="py-20 sm:py-28 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <span className="inline-block mb-4 px-4 py-1.5 bg-emerald-50 text-emerald-600 text-sm font-semibold rounded-full">
-            Our Work
-          </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
-            Reels &amp; Content
-          </h2>
-          <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-            Watch our latest creative work across social media platforms.
-          </p>
+        {/* Header */}
+        <div className="flex items-end justify-between mb-10">
+          <div>
+            <span className="inline-block mb-4 px-4 py-1.5 bg-emerald-50 text-emerald-600 text-sm font-semibold rounded-full">
+              Our Work
+            </span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-2">
+              Reels &amp; Content
+            </h2>
+            <p className="text-base sm:text-lg text-slate-500 max-w-xl">
+              Watch our latest creative work across social media platforms.
+            </p>
+          </div>
+          {/* Slider arrows */}
+          <div className="hidden sm:flex items-center gap-2">
+            <button
+              onClick={() => scroll('left')}
+              disabled={!canScrollLeft}
+              className="p-2.5 rounded-full border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              onClick={() => scroll('right')}
+              disabled={!canScrollRight}
+              className="p-2.5 rounded-full border border-slate-200 text-slate-400 hover:text-slate-900 hover:border-slate-300 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              aria-label="Scroll right"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
         </div>
 
-        {grouped['instagram'] && (
-          <PlatformRow platform="instagram" reels={grouped['instagram']} profileUrl={instagramUrl} />
-        )}
-        {grouped['tiktok'] && (
-          <PlatformRow platform="tiktok" reels={grouped['tiktok']} profileUrl={tiktokUrl} />
-        )}
-        {grouped['youtube'] && (
-          <PlatformRow platform="youtube" reels={grouped['youtube']} profileUrl={youtubeUrl} />
-        )}
+        {/* Single row slider — all reels together */}
+        <div className="relative group/slider">
+          {/* Left fade */}
+          {canScrollLeft && (
+            <div className="hidden lg:block absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+          )}
+          {/* Right fade */}
+          {canScrollRight && (
+            <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+          )}
 
+          <div
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory hide-scrollbar"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {reels.map((reel, idx) => (
+              <ThumbnailCard key={reel.id} reel={reel} platform={reel.platform} index={idx} />
+            ))}
+          </div>
+        </div>
+
+        {/* Follow buttons */}
         <div className="text-center mt-10">
           <p className="text-sm text-slate-400 mb-3">Follow us for more content</p>
           <div className="flex items-center justify-center gap-3 flex-wrap">

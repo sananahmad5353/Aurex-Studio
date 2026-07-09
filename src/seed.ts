@@ -24,7 +24,7 @@ async function seed() {
       'https://sfile.chatglm.cn/images-ppt/1b880d7958b7.png',
       'https://sfile.chatglm.cn/images-ppt/e5cedb6c668d.jpg',
     ]) },
-    { key: 'instagramUrl', value: 'https://www.instagram.com/aurex237/' },
+    { key: 'instagramUrl', value: 'https://www.instagram.com/aurexstudio_pk/' },
     { key: 'facebookUrl', value: 'https://www.facebook.com/profile.php?id=61590629273627' },
     { key: 'tiktokUrl', value: 'https://www.tiktok.com/@engr.usman80' },
     { key: 'youtubeUrl', value: '' },

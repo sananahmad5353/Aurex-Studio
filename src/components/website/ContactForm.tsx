@@ -105,7 +105,7 @@ export default function ContactForm({ whatsappNumber, contactEmail, services, mi
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" type="tel" value={form.phone} onChange={(e) => update('phone', e.target.value)} placeholder="+92 323 7939393" className="mt-1.5" />
+              <Input id="phone" type="tel" value={form.phone} onChange={(e) => update('phone', e.target.value)} placeholder="+92 311 5139781" className="mt-1.5" />
             </div>
             <div>
               <Label htmlFor="subject">Subject</Label>

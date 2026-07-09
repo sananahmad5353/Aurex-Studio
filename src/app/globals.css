@@ -178,6 +178,11 @@
   animation: whatsapp-pulse 2s infinite;
 }
 
+/* Hide scrollbar for reels slider */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Embla carousel overrides */
 .embla {
   overflow: hidden;
