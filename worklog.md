@@ -1,29 +1,31 @@
 ---
-Task ID: 1
+Task ID: 2
 Agent: main
-Task: Add reels from Instagram/TikTok with admin control, fix partner images, add social icons to footer, update contact form subject to dropdown
+Task: Multi-page architecture, SEO metadata, logo upload, Google Maps, admin management
 
 Work Log:
-- Read all current project files to understand state
-- Fixed AdminPanel fetchData to include /api/reels fetch (was missing, causing empty reels tab)
-- Added Instagram URL, TikTok URL, YouTube URL fields to admin Settings tab
-- Added YouTube option to reels platform dropdown in admin panel
-- Fixed TrustedPartners component with image error handling (onError fallback to text display)
-- Added 6 partner seeds with working image URLs (Google Ads, Meta Business, Shopify, HubSpot, WordPress, TikTok Ads)
-- Added social media URL settings to seed (instagram: engr.usman93, tiktok: engr.usman80)
-- Updated Footer with Instagram (gradient hover), TikTok, and YouTube (red hover) SVG icons
-- Updated ContactForm subject field from text input to dropdown with services list + "Other" option
-- When "Other" selected, a custom subject input appears with animation
-- Updated SocialReels with YouTube embed support, profile follow buttons, and proper platform icons
-- Updated page.tsx to pass services, instagramUrl, tiktokUrl, youtubeUrl as props
-- Added 8 service seeds to replace data lost during db reset
-- Re-seeded database and verified all data via /api/public endpoint
-- Build succeeded with zero errors
+- Converted single-page app to multi-page architecture (6 separate pages)
+- Created SiteShell shared layout component (Navbar + Footer + WhatsApp + AdminPanel)
+- Updated Navbar with Next.js Link routing, usePathname for active states, logo support
+- Created 5 new pages with server-side generateMetadata for SEO: /about, /services, /contact, /reels, /reviews
+- Each page has gradient header with breadcrumb navigation (Home > Page Name)
+- Home page shows hero, partners, services, about preview, 3 review cards, reels CTA banner, CTA section
+- Added Google Maps embed to /contact page (I-8 Markaz, Islamabad)
+- Contact page includes address card, phone, email, WhatsApp, social links sidebar
+- Created /api/upload/logo API with sharp auto-resize (logo, logo-lg, favicon, og-image in WebP)
+- Accepts any format (PNG, JPG, SVG, WebP, GIF, BMP), max 10MB, auto-transparent/white background
+- Added SEO & Logo tab to admin panel (meta title, description, keywords, OG image, address, logo upload)
+- Updated Footer links from hash (#) to actual page routes (/)
+- Added Reels and Reviews to footer quick links
+- Removed cache-control meta tags from root layout (hurts SEO)
+- Added SEO settings to seed: metaTitle, metaDescription, metaKeywords, address, logoUrl, ogImageUrl
+- Made ContactForm support minimal mode (for embedding in contact page without section wrapper)
+- Verified all 6 pages return HTTP 200 with proper SEO metadata in HTML
 
 Stage Summary:
-- All 8 changes implemented and build-verified
-- Admin panel now fully manages reels (create/edit/delete with Instagram/TikTok/YouTube platform support)
-- Footer has 3 social icons (Instagram with gradient hover, TikTok, YouTube with red hover)
-- Contact form has dropdown subject list populated from services + "Other" custom input option
-- Partner images now gracefully fall back to text name when image fails to load
-- Social media URLs (Instagram/TikTok/YouTube) manageable from admin Settings tab
+- 6 pages: /, /about, /services, /contact, /reels, /reviews
+- Full SEO: unique title, description, keywords, OG tags, Twitter cards per page
+- Logo upload: any format/size, auto-resized to 4 sizes (200x200, 400x400, 32x32, 1200x630)
+- Google Maps: embedded at /contact with I-8 Markaz, Islamabad location
+- All manageable from admin panel SEO & Logo tab
+- Footer and Navbar use page routes (no hash links)

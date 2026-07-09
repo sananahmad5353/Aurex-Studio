@@ -32,7 +32,7 @@ interface ReelItem { id: string; platform: string; reelUrl: string; order: numbe
 
 interface AdminPanelProps { open: boolean; onClose: () => void; }
 
-type Tab = 'settings' | 'slides' | 'services' | 'reviews' | 'partners' | 'reels' | 'messages' | 'password' | 'security';
+type Tab = 'settings' | 'slides' | 'services' | 'reviews' | 'partners' | 'reels' | 'messages' | 'password' | 'seo';
 
 export default function AdminPanel({ open, onClose }: AdminPanelProps) {
   const [token, setToken] = useState<string | null>(null);
@@ -295,7 +295,7 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
     { key: 'reels', label: 'Reels', icon: <Film size={18} /> },
     { key: 'messages', label: 'Messages', icon: <MessageSquare size={18} /> },
     { key: 'password', label: 'Password', icon: <KeyRound size={18} /> },
-    { key: 'security', label: 'Security', icon: <Shield size={18} /> },
+    { key: 'seo', label: 'SEO & Logo', icon: <Search size={18} /> },
   ];
 
   const unreadCount = messages.filter(m => !m.read).length;
@@ -617,84 +617,144 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
             </div>
           )}
 
-          {/* SECURITY / 2FA */}
-          {activeTab === 'security' && (
-            <div className="space-y-6 max-w-lg">
-              <h3 className="text-lg font-semibold text-slate-900">Security Settings</h3>
-
-              {/* 2FA Status */}
-              <div className={`p-4 rounded-xl border ${twoFactorEnabled ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}>
-                <div className="flex items-center gap-3 mb-3">
-                  {twoFactorEnabled ? <Lock size={20} className="text-emerald-600" /> : <Unlock size={20} className="text-slate-400" />}
-                  <div>
-                    <p className="font-medium text-slate-900">Two-Factor Authentication</p>
-                    <p className="text-sm text-slate-500">{twoFactorEnabled ? 'Enabled - Your account has extra protection' : 'Disabled - Add an extra layer of security'}</p>
-                  </div>
-                  <span className={`ml-auto text-xs px-2.5 py-1 rounded-full font-medium ${twoFactorEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>{twoFactorEnabled ? 'ON' : 'OFF'}</span>
-                </div>
-
-                {!twoFactorEnabled && !showTwoFactorSetup && (
-                  <Button onClick={handleSetup2FA} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm">
-                    {loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Enable 2FA
-                  </Button>
-                )}
+          {/* SEO & LOGO */}
+          {activeTab === 'seo' && (
+            <div className="space-y-6 max-w-2xl">
+              <h3 className="text-lg font-semibold text-slate-900">SEO & Branding</h3>
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+                These settings improve your website visibility on Google and social media platforms.
+              </div>
+              <div className="space-y-4">
+                <div><Label>Meta Title (for search engines)</Label><Input value={settings.metaTitle || ''} onChange={(e) => setSettings({ ...settings, metaTitle: e.target.value })} className="mt-1.5" placeholder="Aurex Studio - Digital Marketing Agency" /></div>
+                <div><Label>Meta Description</Label><Textarea value={settings.metaDescription || ''} onChange={(e) => setSettings({ ...settings, metaDescription: e.target.value })} className="mt-1.5" rows={3} placeholder="A brief description of your business for search results..." /></div>
+                <div><Label>Meta Keywords (comma separated)</Label><Input value={settings.metaKeywords || ''} onChange={(e) => setSettings({ ...settings, metaKeywords: e.target.value })} className="mt-1.5" placeholder="digital marketing, SEO, branding, Pakistan" /></div>
+                <div><Label>OG Image URL (for social sharing)</Label><Input value={settings.ogImageUrl || ''} onChange={(e) => setSettings({ ...settings, ogImageUrl: e.target.value })} className="mt-1.5" placeholder="/uploads/og-image.webp" /></div>
+                <div><Label>Business Address</Label><Input value={settings.address || ''} onChange={(e) => setSettings({ ...settings, address: e.target.value })} className="mt-1.5" placeholder="I-8 Markaz, Islamabad, Pakistan" /></div>
               </div>
 
-              {/* 2FA Setup Flow */}
-              {showTwoFactorSetup && !twoFactorEnabled && twoFactorUri && (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 space-y-4">
-                  <h4 className="font-semibold text-slate-900">Step 1: Scan QR Code</h4>
-                  <p className="text-sm text-slate-600">Open Google Authenticator, Authy, or any TOTP app and scan this QR code:</p>
-                  <div className="bg-white p-4 rounded-lg border inline-block">
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(twoFactorUri)}`} alt="2FA QR Code" className="w-48 h-48" draggable="false" />
+              <div className="border-t pt-6">
+                <h4 className="font-semibold text-slate-900 mb-3">Logo Upload</h4>
+                <p className="text-sm text-slate-500 mb-4">Upload your logo in any format (PNG, JPG, SVG, WebP). The system will auto-resize it for all placements.</p>
+
+                {settings.logoUrl && (
+                  <div className="mb-4 flex items-center gap-4 p-4 bg-slate-50 rounded-xl border">
+                    <img src={settings.logoUrl} alt="Current logo" className="h-16 w-16 rounded-lg object-contain border" />
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">Current Logo</p>
+                      <p className="text-xs text-slate-400">{settings.logoUrl}</p>
+                    </div>
                   </div>
-                  <div className="bg-slate-100 rounded-lg p-3">
-                    <p className="text-xs text-slate-500 mb-1">Manual entry key:</p>
-                    <p className="font-mono text-sm text-slate-800 select-all break-all">{twoFactorSecret}</p>
+                )}
+
+                <div>
+                  <Label htmlFor="logo-upload">Upload New Logo</Label>
+                  <Input
+                    id="logo-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const fd = new FormData();
+                      fd.append('logo', file);
+                      try {
+                        const r = await fetch('/api/upload/logo', { method: 'POST', headers: h(), body: fd });
+                        const d = await r.json();
+                        if (r.ok) {
+                          setSettings({ ...settings, logoUrl: d.urls?.logo || '', ogImageUrl: d.urls?.['og-image'] || settings.ogImageUrl || '' });
+                          toast({ title: 'Logo uploaded successfully!' });
+                        } else {
+                          toast({ title: 'Error', description: d.error, variant: 'destructive' });
+                        }
+                      } catch {
+                        toast({ title: 'Upload failed', variant: 'destructive' });
+                      }
+                    }}
+                    className="mt-1.5"
+                  />
+                  <p className="text-xs text-slate-400 mt-1">Accepts: PNG, JPG, WebP, SVG, GIF, BMP. Max 10MB. Auto-resized to all required sizes.</p>
+                </div>
+              </div>
+
+              <Button onClick={handleSaveSettings} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl">{loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}<Save size={16} className="mr-2" />Save SEO Settings</Button>
+
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold text-slate-900">Security & 2FA</h3>
+
+                {/* 2FA Status */}
+                <div className={`p-4 rounded-xl border mt-4 ${twoFactorEnabled ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    {twoFactorEnabled ? <Lock size={20} className="text-emerald-600" /> : <Unlock size={20} className="text-slate-400" />}
+                    <div>
+                      <p className="font-medium text-slate-900">Two-Factor Authentication</p>
+                      <p className="text-sm text-slate-500">{twoFactorEnabled ? 'Enabled - Your account has extra protection' : 'Disabled - Add an extra layer of security'}</p>
+                    </div>
+                    <span className={`ml-auto text-xs px-2.5 py-1 rounded-full font-medium ${twoFactorEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>{twoFactorEnabled ? 'ON' : 'OFF'}</span>
                   </div>
 
-                  <div className="border-t pt-4">
-                    <h4 className="font-semibold text-slate-900 mb-2">Step 2: Verify Code</h4>
-                    <p className="text-sm text-slate-600 mb-3">Enter the 6-digit code from your authenticator app to confirm setup. Test code: <span className="font-mono font-bold text-emerald-600">{twoFactorSetupCode}</span></p>
+                  {!twoFactorEnabled && !showTwoFactorSetup && (
+                    <Button onClick={handleSetup2FA} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm">
+                      {loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Enable 2FA
+                    </Button>
+                  )}
+                </div>
+
+                {/* 2FA Setup Flow */}
+                {showTwoFactorSetup && !twoFactorEnabled && twoFactorUri && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 space-y-4 mt-4">
+                    <h4 className="font-semibold text-slate-900">Step 1: Scan QR Code</h4>
+                    <p className="text-sm text-slate-600">Open Google Authenticator, Authy, or any TOTP app and scan this QR code:</p>
+                    <div className="bg-white p-4 rounded-lg border inline-block">
+                      <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(twoFactorUri)}`} alt="2FA QR Code" className="w-48 h-48" draggable="false" />
+                    </div>
+                    <div className="bg-slate-100 rounded-lg p-3">
+                      <p className="text-xs text-slate-500 mb-1">Manual entry key:</p>
+                      <p className="font-mono text-sm text-slate-800 select-all break-all">{twoFactorSecret}</p>
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <h4 className="font-semibold text-slate-900 mb-2">Step 2: Verify Code</h4>
+                      <p className="text-sm text-slate-600 mb-3">Enter the 6-digit code from your authenticator app to confirm setup. Test code: <span className="font-mono font-bold text-emerald-600">{twoFactorSetupCode}</span></p>
+                      <div className="flex gap-2">
+                        <Input type="text" placeholder="000000" value={twoFactorVerifyCode} onChange={(e) => setTwoFactorVerifyCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} className="w-40 text-center text-xl tracking-[0.3em] font-mono" maxLength={6} />
+                        <Button onClick={() => handleVerify2FA('enable')} disabled={loading || twoFactorVerifyCode.length !== 6} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm">
+                          {loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Verify &amp; Enable
+                        </Button>
+                      </div>
+                    </div>
+                    <button onClick={() => { setShowTwoFactorSetup(false); setTwoFactorSecret(''); setTwoFactorUri(''); setTwoFactorSetupCode(''); setTwoFactorVerifyCode(''); }} className="text-xs text-slate-500 hover:text-slate-700 underline">Cancel setup</button>
+                  </div>
+                )}
+
+                {/* Disable 2FA */}
+                {twoFactorEnabled && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-6 space-y-4 mt-4">
+                    <h4 className="font-semibold text-red-800">Disable Two-Factor Authentication</h4>
+                    <p className="text-sm text-slate-600">Enter a valid 2FA code from your authenticator app to disable 2FA. This will make your account less secure.</p>
                     <div className="flex gap-2">
-                      <Input type="text" placeholder="000000" value={twoFactorVerifyCode} onChange={(e) => setTwoFactorVerifyCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} className="w-40 text-center text-xl tracking-[0.3em] font-mono" maxLength={6} />
-                      <Button onClick={() => handleVerify2FA('enable')} disabled={loading || twoFactorVerifyCode.length !== 6} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm">
-                        {loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Verify &amp; Enable
+                      <Input type="text" placeholder="000000" value={twoFactorDisableCode} onChange={(e) => setTwoFactorDisableCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} className="w-40 text-center text-xl tracking-[0.3em] font-mono" maxLength={6} />
+                      <Button onClick={() => handleVerify2FA('disable')} disabled={loading || twoFactorDisableCode.length !== 6} variant="destructive" size="sm">
+                        {loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Disable 2FA
                       </Button>
                     </div>
                   </div>
-                  <button onClick={() => { setShowTwoFactorSetup(false); setTwoFactorSecret(''); setTwoFactorUri(''); setTwoFactorSetupCode(''); setTwoFactorVerifyCode(''); }} className="text-xs text-slate-500 hover:text-slate-700 underline">Cancel setup</button>
-                </div>
-              )}
+                )}
 
-              {/* Disable 2FA */}
-              {twoFactorEnabled && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-6 space-y-4">
-                  <h4 className="font-semibold text-red-800">Disable Two-Factor Authentication</h4>
-                  <p className="text-sm text-slate-600">Enter a valid 2FA code from your authenticator app to disable 2FA. This will make your account less secure.</p>
-                  <div className="flex gap-2">
-                    <Input type="text" placeholder="000000" value={twoFactorDisableCode} onChange={(e) => setTwoFactorDisableCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} className="w-40 text-center text-xl tracking-[0.3em] font-mono" maxLength={6} />
-                    <Button onClick={() => handleVerify2FA('disable')} disabled={loading || twoFactorDisableCode.length !== 6} variant="destructive" size="sm">
-                      {loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Disable 2FA
-                    </Button>
+                {/* Security Info */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-3 mt-4">
+                  <h4 className="font-semibold text-slate-900">Security Features Active</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />HMAC-signed auth tokens</div>
+                    <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />24-hour session expiry</div>
+                    <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />PBKDF2 hashing (600K iterations)</div>
+                    <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Rate limiting on all endpoints</div>
+                    <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Input sanitization (XSS prevention)</div>
+                    <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Account lockout (5 failed attempts)</div>
+                    <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Content Security Policy (CSP)</div>
+                    <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Secure HTTP headers (HSTS)</div>
+                    <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Timing-safe comparisons</div>
+                    <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Content copy protection</div>
                   </div>
-                </div>
-              )}
-
-              {/* Security Info */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-3">
-                <h4 className="font-semibold text-slate-900">Security Features Active</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />HMAC-signed auth tokens</div>
-                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />24-hour session expiry</div>
-                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />PBKDF2 hashing (600K iterations)</div>
-                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Rate limiting on all endpoints</div>
-                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Input sanitization (XSS prevention)</div>
-                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Account lockout (5 failed attempts)</div>
-                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Content Security Policy (CSP)</div>
-                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Secure HTTP headers (HSTS)</div>
-                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Timing-safe comparisons</div>
-                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Content copy protection</div>
                 </div>
               </div>
             </div>

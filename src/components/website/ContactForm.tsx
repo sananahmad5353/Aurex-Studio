@@ -11,6 +11,7 @@ interface ContactFormProps {
   whatsappNumber: string;
   contactEmail: string;
   services?: { id: string; title: string }[];
+  minimal?: boolean;
 }
 
 const DEFAULT_SUBJECTS = [
@@ -24,7 +25,7 @@ const DEFAULT_SUBJECTS = [
   'E-commerce Growth',
 ];
 
-export default function ContactForm({ whatsappNumber, contactEmail, services }: ContactFormProps) {
+export default function ContactForm({ whatsappNumber, contactEmail, services, minimal }: ContactFormProps) {
   const subjectOptions = services && services.length > 0
     ? services.map((s) => s.title)
     : DEFAULT_SUBJECTS;
@@ -69,6 +70,77 @@ export default function ContactForm({ whatsappNumber, contactEmail, services }: 
     }
     setSending(false);
   };
+
+  const formCard = (
+    <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+      {sent ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
+            <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">Message Sent!</h3>
+          <p className="text-slate-500 mb-6 max-w-sm">
+            Your message has been sent via WhatsApp and Email. We&apos;ll get back to you shortly.
+          </p>
+          <Button
+            onClick={() => setSent(false)}
+            variant="outline"
+            className="rounded-full"
+          >
+            Send Another Message
+          </Button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="name">Full Name *</Label>
+              <Input id="name" value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="John Doe" className="mt-1.5" required />
+            </div>
+            <div>
+              <Label htmlFor="email">Email Address *</Label>
+              <Input id="email" type="email" value={form.email} onChange={(e) => update('email', e.target.value)} placeholder="john@example.com" className="mt-1.5" required />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input id="phone" type="tel" value={form.phone} onChange={(e) => update('phone', e.target.value)} placeholder="+92 323 7939393" className="mt-1.5" />
+            </div>
+            <div>
+              <Label htmlFor="subject">Subject</Label>
+              <div className="relative mt-1.5">
+                <select id="subject" value={form.subject} onChange={(e) => update('subject', e.target.value)} className="w-full h-10 rounded-lg border border-input bg-white px-3 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors">
+                  <option value="" disabled>Select a subject</option>
+                  {subjectOptions.map((subj) => (
+                    <option key={subj} value={subj}>{subj}</option>
+                  ))}
+                  <option value="Other">Other</option>
+                </select>
+                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
+            </div>
+          </div>
+          {form.subject === 'Other' && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <Label htmlFor="customSubject">Your Subject *</Label>
+              <Input id="customSubject" value={form.customSubject} onChange={(e) => update('customSubject', e.target.value)} placeholder="Enter your subject here..." className="mt-1.5" required autoFocus />
+            </div>
+          )}
+          <div>
+            <Label htmlFor="message">Message *</Label>
+            <Textarea id="message" value={form.message} onChange={(e) => update('message', e.target.value)} placeholder="Tell us about your project, goals, and how we can help..." className="mt-1.5 min-h-[120px]" rows={5} required />
+          </div>
+          <Button type="submit" disabled={sending || !form.name || !form.email || !form.message || (form.subject === 'Other' && !form.customSubject.trim())} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-12 text-base font-semibold">
+            {sending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...</>) : (<><Send className="mr-2 h-4 w-4" /> Send Message</>)}
+          </Button>
+          <p className="text-xs text-slate-400 text-center">Your message will be sent via WhatsApp & Email directly</p>
+        </form>
+      )}
+    </div>
+  );
+
+  if (minimal) return formCard;
 
   return (
     <section id="contact" className="py-20 sm:py-28 bg-slate-50">

@@ -38,10 +38,12 @@ export default function Footer({ siteName, whatsappNumber, instagramUrl, tiktokU
   ];
 
   const quickLinks = [
-    { label: 'Home', href: '#home' },
-    { label: 'Services', href: '#services' },
-    { label: 'About', href: '#about' },
-    { label: 'Contact', href: '#contact' },
+    { label: 'Home', href: '/' },
+    { label: 'Services', href: '/services' },
+    { label: 'About', href: '/about' },
+    { label: 'Contact', href: '/contact' },
+    { label: 'Reels', href: '/reels' },
+    { label: 'Reviews', href: '/reviews' },
   ];
 
   return (
@@ -122,7 +124,7 @@ export default function Footer({ siteName, whatsappNumber, instagramUrl, tiktokU
             <ul className="space-y-3">
               {services.map((s, i) => (
                 <li key={i}>
-                  <a href="#services" className="text-slate-400 hover:text-emerald-400 text-sm transition-colors">
+                  <a href="/services" className="text-slate-400 hover:text-emerald-400 text-sm transition-colors">
                     {s}
                   </a>
                 </li>

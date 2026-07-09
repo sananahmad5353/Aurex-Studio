@@ -1,16 +1,28 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface NavbarProps {
   siteName: string;
+  logoUrl?: string;
 }
 
-export default function Navbar({ siteName }: NavbarProps) {
+const navLinks = [
+  { label: 'Home', href: '/' },
+  { label: 'Services', href: '/services' },
+  { label: 'About', href: '/about' },
+  { label: 'Reels', href: '/reels' },
+  { label: 'Contact', href: '/contact' },
+];
+
+export default function Navbar({ siteName, logoUrl }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -18,13 +30,14 @@ export default function Navbar({ siteName }: NavbarProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks = [
-    { label: 'Home', href: '#home' },
-    { label: 'Services', href: '#services' },
-    { label: 'About', href: '#about' },
-    { label: 'Reviews', href: '#reviews' },
-    { label: 'Contact', href: '#contact' },
-  ];
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/';
+    return pathname.startsWith(href);
+  };
 
   return (
     <header
@@ -34,32 +47,42 @@ export default function Navbar({ siteName }: NavbarProps) {
     >
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 sm:h-20 items-center justify-between">
-          <a href="#home" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900">
-              <span className="text-lg font-bold text-white">A</span>
-            </div>
+          <Link href="/" className="flex items-center gap-2.5">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={siteName}
+                className="h-9 w-9 rounded-lg object-contain"
+              />
+            ) : (
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900">
+                <span className="text-lg font-bold text-white">A</span>
+              </div>
+            )}
             <span className={`text-lg sm:text-xl font-bold transition-colors ${scrolled ? 'text-slate-900' : 'text-white'}`}>
               {siteName}
             </span>
-          </a>
+          </Link>
 
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
                 className={`text-sm font-medium transition-colors hover:text-emerald-500 ${
-                  scrolled ? 'text-slate-700' : 'text-white/90'
+                  isActive(link.href)
+                    ? scrolled ? 'text-emerald-600' : 'text-emerald-400'
+                    : scrolled ? 'text-slate-700' : 'text-white/90'
                 }`}
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
             <Button
               asChild
               className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 rounded-full"
             >
-              <a href="#contact">Get a Quote</a>
+              <Link href="/contact">Get a Quote</Link>
             </Button>
           </div>
 
@@ -79,21 +102,22 @@ export default function Navbar({ siteName }: NavbarProps) {
         {mobileOpen && (
           <div className="md:hidden bg-white border-t rounded-b-2xl shadow-lg pb-4">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
-                className="block px-6 py-3 text-sm font-medium text-slate-700 hover:text-emerald-500 hover:bg-slate-50 transition-colors"
-                onClick={() => setMobileOpen(false)}
+                className={`block px-6 py-3 text-sm font-medium transition-colors hover:text-emerald-500 hover:bg-slate-50 ${
+                  isActive(link.href) ? 'text-emerald-600 bg-emerald-50/50' : 'text-slate-700'
+                }`}
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
             <div className="px-6 pt-2">
               <Button
                 asChild
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full"
               >
-                <a href="#contact" onClick={() => setMobileOpen(false)}>Get a Quote</a>
+                <Link href="/contact" onClick={() => setMobileOpen(false)}>Get a Quote</Link>
               </Button>
             </div>
           </div>
