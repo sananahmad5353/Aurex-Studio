@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import SecurityGuard from "@/components/website/SecurityGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,6 +26,10 @@ export const metadata: Metadata = {
     description: "Full-service digital marketing agency helping businesses grow with data-driven strategies.",
     type: "website",
   },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
@@ -34,9 +39,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Prevent caching of sensitive pages */}
+        <meta httpEquiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
+        <SecurityGuard />
         {children}
         <Toaster />
       </body>

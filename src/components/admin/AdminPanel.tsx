@@ -6,7 +6,7 @@ import {
   Target, BarChart3, TrendingUp, Rocket, Users, Filter, Handshake, Lightbulb,
   ArrowRight, Zap, Globe, Search, Mail, Megaphone, PieChart, Database,
   Code, Cpu, Smartphone, Palette, PenTool, Monitor, Shield, Star, Heart,
-  Award, Bookmark, Briefcase, Calendar, Camera, Cloud, MessageSquare, Eye, EyeOff, Film, Play,
+  Award, Bookmark, Briefcase, Calendar, Camera, Cloud, MessageSquare, Eye, EyeOff, Film, Play, Lock, Unlock, QrCode, SmartphoneNfc,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,7 @@ interface ReelItem { id: string; platform: string; reelUrl: string; order: numbe
 
 interface AdminPanelProps { open: boolean; onClose: () => void; }
 
-type Tab = 'settings' | 'slides' | 'services' | 'reviews' | 'partners' | 'reels' | 'messages' | 'password';
+type Tab = 'settings' | 'slides' | 'services' | 'reviews' | 'partners' | 'reels' | 'messages' | 'password' | 'security';
 
 export default function AdminPanel({ open, onClose }: AdminPanelProps) {
   const [token, setToken] = useState<string | null>(null);
@@ -66,6 +66,17 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
   const [currentPwd, setCurrentPwd] = useState('');
   const [newPwd, setNewPwd] = useState('');
   const [confirmPwd, setConfirmPwd] = useState('');
+  // 2FA states
+  const [twoFactorRequired, setTwoFactorRequired] = useState(false);
+  const [pendingToken, setPendingToken] = useState<string | null>(null);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [twoFactorSecret, setTwoFactorSecret] = useState('');
+  const [twoFactorUri, setTwoFactorUri] = useState('');
+  const [twoFactorSetupCode, setTwoFactorSetupCode] = useState('');
+  const [twoFactorVerifyCode, setTwoFactorVerifyCode] = useState('');
+  const [twoFactorDisableCode, setTwoFactorDisableCode] = useState('');
+  const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
 
   const h = () => ({ 'Content-Type': 'application/json' as const, Authorization: `Bearer ${token}` as const });
 
@@ -83,12 +94,71 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
   const handleLogin = async () => {
     setLoginLoading(true); setLoginError('');
     try {
-      const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+      const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, twoFactorCode: twoFactorRequired ? twoFactorCode : undefined, pendingToken: twoFactorRequired ? pendingToken : undefined }) });
       const data = await res.json();
-      if (res.ok) { setToken(data.token); toast({ title: 'Logged in successfully' }); void fetchData(); }
-      else setLoginError(data.error || 'Login failed');
+      if (res.ok) {
+        if (data.twoFactorRequired) {
+          setTwoFactorRequired(true);
+          setPendingToken(data.pendingToken);
+          setLoginError('');
+        } else {
+          setToken(data.token);
+          setTwoFactorRequired(false);
+          setPendingToken(null);
+          setTwoFactorCode('');
+          toast({ title: 'Logged in successfully' });
+          void fetchTwoFactorStatus();
+          void fetchData();
+        }
+      }
+      else { setLoginError(data.error || 'Login failed'); }
     } catch { setLoginError('Network error'); }
     setLoginLoading(false);
+  };
+
+  const fetchTwoFactorStatus = async () => {
+    if (!token) return;
+    try {
+      const r = await fetch('/api/auth/2fa', { headers: h() });
+      if (r.ok) { const d = await r.json(); setTwoFactorEnabled(d.enabled); }
+    } catch { /* */ }
+  };
+
+  const handleSetup2FA = async () => {
+    setLoading(true);
+    try {
+      const r = await fetch('/api/auth/2fa', { method: 'POST', headers: h() });
+      const d = await r.json();
+      if (r.ok) {
+        setTwoFactorSecret(d.secret);
+        setTwoFactorUri(d.uri);
+        setTwoFactorSetupCode(d.testCode);
+        setShowTwoFactorSetup(true);
+      } else { toast({ title: 'Error', description: d.error, variant: 'destructive' }); }
+    } catch { toast({ title: 'Error', variant: 'destructive' }); }
+    setLoading(false);
+  };
+
+  const handleVerify2FA = async (action: 'enable' | 'disable') => {
+    const code = action === 'enable' ? twoFactorVerifyCode : twoFactorDisableCode;
+    if (!code) { toast({ title: 'Enter the 6-digit code', variant: 'destructive' }); return; }
+    setLoading(true);
+    try {
+      const r = await fetch('/api/auth/2fa', { method: 'PUT', headers: h(), body: JSON.stringify({ code, action }) });
+      const d = await r.json();
+      if (r.ok) {
+        toast({ title: d.message });
+        setTwoFactorEnabled(action === 'enable');
+        setShowTwoFactorSetup(false);
+        setTwoFactorSecret('');
+        setTwoFactorUri('');
+        setTwoFactorSetupCode('');
+        setTwoFactorVerifyCode('');
+        setTwoFactorDisableCode('');
+        if (d.token) setToken(d.token);
+      } else { toast({ title: 'Error', description: d.error, variant: 'destructive' }); }
+    } catch { toast({ title: 'Error', variant: 'destructive' }); }
+    setLoading(false);
   };
 
   const handleSaveSettings = async () => {
@@ -164,7 +234,7 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
 
   const handleChangePassword = async () => {
     if (newPwd !== confirmPwd) { toast({ title: 'Passwords do not match', variant: 'destructive' }); return; }
-    if (newPwd.length < 6) { toast({ title: 'Min 6 characters', variant: 'destructive' }); return; }
+    if (newPwd.length < 8) { toast({ title: 'Min 8 characters, with uppercase, lowercase, number & special char', variant: 'destructive' }); return; }
     setLoading(true);
     const res = await fetch('/api/auth/change-password', { method: 'POST', headers: h(), body: JSON.stringify({ currentPassword: currentPwd, newPassword: newPwd }) });
     const d = await res.json();
@@ -185,11 +255,28 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
             <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors"><X size={20} className="text-slate-500" /></button>
           </div>
           {loginError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">{loginError}</div>}
+          {twoFactorRequired && (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700 flex items-center gap-2">
+              <SmartphoneNfc size={16} className="flex-shrink-0" />
+              Two-factor authentication required. Enter the code from your authenticator app.
+            </div>
+          )}
           <div className="space-y-4">
-            <div><Label htmlFor="email">Email</Label><Input id="email" type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5" /></div>
-            <div><Label htmlFor="password">Password</Label><Input id="password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleLogin()} className="mt-1.5" /></div>
-            <Button onClick={handleLogin} disabled={loginLoading || !email || !password} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-11">
-              {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Sign In
+            {!twoFactorRequired && (
+              <>
+                <div><Label htmlFor="email">Email</Label><Input id="email" type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5" /></div>
+                <div><Label htmlFor="password">Password</Label><Input id="password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleLogin()} className="mt-1.5" /></div>
+              </>
+            )}
+            {twoFactorRequired && (
+              <div>
+                <Label htmlFor="twofa">Authentication Code</Label>
+                <Input id="twofa" type="text" placeholder="6-digit code" value={twoFactorCode} onChange={(e) => setTwoFactorCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} onKeyDown={(e) => e.key === 'Enter' && handleLogin()} className="mt-1.5 text-center text-2xl tracking-[0.5em] font-mono" maxLength={6} autoFocus />
+                <button onClick={() => { setTwoFactorRequired(false); setPendingToken(null); setTwoFactorCode(''); setLoginError(''); }} className="mt-2 text-xs text-slate-500 hover:text-slate-700 underline">Back to password login</button>
+              </div>
+            )}
+            <Button onClick={handleLogin} disabled={loginLoading || (!twoFactorRequired && (!email || !password)) || (twoFactorRequired && twoFactorCode.length !== 6)} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-11">
+              {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{twoFactorRequired ? 'Verify Code' : 'Sign In'}
             </Button>
           </div>
         </div>
@@ -207,6 +294,7 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
     { key: 'reels', label: 'Reels', icon: <Film size={18} /> },
     { key: 'messages', label: 'Messages', icon: <MessageSquare size={18} /> },
     { key: 'password', label: 'Password', icon: <KeyRound size={18} /> },
+    { key: 'security', label: 'Security', icon: <Shield size={18} /> },
   ];
 
   const unreadCount = messages.filter(m => !m.read).length;
@@ -518,10 +606,93 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
               <h3 className="text-lg font-semibold text-slate-900">Change Password</h3>
               <div className="space-y-4">
                 <div><Label>Current Password</Label><Input type="password" value={currentPwd} onChange={(e) => setCurrentPwd(e.target.value)} className="mt-1.5" /></div>
-                <div><Label>New Password</Label><Input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} className="mt-1.5" placeholder="Minimum 6 characters" /></div>
+                <div><Label>New Password</Label><Input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} className="mt-1.5" placeholder="Min 8 chars: Aa1@..." /></div>
                 <div><Label>Confirm New Password</Label><Input type="password" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} className="mt-1.5" /></div>
               </div>
               <Button onClick={handleChangePassword} disabled={loading || !currentPwd || !newPwd || !confirmPwd} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl">{loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}<KeyRound size={16} className="mr-2" />Change Password</Button>
+            </div>
+          )}
+
+          {/* SECURITY / 2FA */}
+          {activeTab === 'security' && (
+            <div className="space-y-6 max-w-lg">
+              <h3 className="text-lg font-semibold text-slate-900">Security Settings</h3>
+
+              {/* 2FA Status */}
+              <div className={`p-4 rounded-xl border ${twoFactorEnabled ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}>
+                <div className="flex items-center gap-3 mb-3">
+                  {twoFactorEnabled ? <Lock size={20} className="text-emerald-600" /> : <Unlock size={20} className="text-slate-400" />}
+                  <div>
+                    <p className="font-medium text-slate-900">Two-Factor Authentication</p>
+                    <p className="text-sm text-slate-500">{twoFactorEnabled ? 'Enabled - Your account has extra protection' : 'Disabled - Add an extra layer of security'}</p>
+                  </div>
+                  <span className={`ml-auto text-xs px-2.5 py-1 rounded-full font-medium ${twoFactorEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>{twoFactorEnabled ? 'ON' : 'OFF'}</span>
+                </div>
+
+                {!twoFactorEnabled && !showTwoFactorSetup && (
+                  <Button onClick={handleSetup2FA} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm">
+                    {loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Enable 2FA
+                  </Button>
+                )}
+              </div>
+
+              {/* 2FA Setup Flow */}
+              {showTwoFactorSetup && !twoFactorEnabled && twoFactorUri && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 space-y-4">
+                  <h4 className="font-semibold text-slate-900">Step 1: Scan QR Code</h4>
+                  <p className="text-sm text-slate-600">Open Google Authenticator, Authy, or any TOTP app and scan this QR code:</p>
+                  <div className="bg-white p-4 rounded-lg border inline-block">
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(twoFactorUri)}`} alt="2FA QR Code" className="w-48 h-48" draggable="false" />
+                  </div>
+                  <div className="bg-slate-100 rounded-lg p-3">
+                    <p className="text-xs text-slate-500 mb-1">Manual entry key:</p>
+                    <p className="font-mono text-sm text-slate-800 select-all break-all">{twoFactorSecret}</p>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="font-semibold text-slate-900 mb-2">Step 2: Verify Code</h4>
+                    <p className="text-sm text-slate-600 mb-3">Enter the 6-digit code from your authenticator app to confirm setup. Test code: <span className="font-mono font-bold text-emerald-600">{twoFactorSetupCode}</span></p>
+                    <div className="flex gap-2">
+                      <Input type="text" placeholder="000000" value={twoFactorVerifyCode} onChange={(e) => setTwoFactorVerifyCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} className="w-40 text-center text-xl tracking-[0.3em] font-mono" maxLength={6} />
+                      <Button onClick={() => handleVerify2FA('enable')} disabled={loading || twoFactorVerifyCode.length !== 6} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm">
+                        {loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Verify &amp; Enable
+                      </Button>
+                    </div>
+                  </div>
+                  <button onClick={() => { setShowTwoFactorSetup(false); setTwoFactorSecret(''); setTwoFactorUri(''); setTwoFactorSetupCode(''); setTwoFactorVerifyCode(''); }} className="text-xs text-slate-500 hover:text-slate-700 underline">Cancel setup</button>
+                </div>
+              )}
+
+              {/* Disable 2FA */}
+              {twoFactorEnabled && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-6 space-y-4">
+                  <h4 className="font-semibold text-red-800">Disable Two-Factor Authentication</h4>
+                  <p className="text-sm text-slate-600">Enter a valid 2FA code from your authenticator app to disable 2FA. This will make your account less secure.</p>
+                  <div className="flex gap-2">
+                    <Input type="text" placeholder="000000" value={twoFactorDisableCode} onChange={(e) => setTwoFactorDisableCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} className="w-40 text-center text-xl tracking-[0.3em] font-mono" maxLength={6} />
+                    <Button onClick={() => handleVerify2FA('disable')} disabled={loading || twoFactorDisableCode.length !== 6} variant="destructive" size="sm">
+                      {loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Disable 2FA
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Security Info */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-3">
+                <h4 className="font-semibold text-slate-900">Security Features Active</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />HMAC-signed auth tokens</div>
+                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />24-hour session expiry</div>
+                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />PBKDF2 hashing (600K iterations)</div>
+                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Rate limiting on all endpoints</div>
+                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Input sanitization (XSS prevention)</div>
+                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Account lockout (5 failed attempts)</div>
+                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Content Security Policy (CSP)</div>
+                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Secure HTTP headers (HSTS)</div>
+                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Timing-safe comparisons</div>
+                  <div className="flex items-center gap-2 text-emerald-700"><div className="w-2 h-2 rounded-full bg-emerald-500" />Content copy protection</div>
+                </div>
+              </div>
             </div>
           )}
         </div>

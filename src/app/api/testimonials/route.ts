@@ -1,4 +1,6 @@
 import { db } from '@/lib/db';
+import { requireAdmin, isValidCuid } from '@/lib/admin-auth';
+import { sanitizeString, sanitizeUrl, sanitizeInt, sanitizeBool } from '@/lib/validate';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
@@ -14,22 +16,26 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const decoded = Buffer.from(authHeader.replace('Bearer ', ''), 'base64').toString('utf-8');
-    const admin = await db.admin.findUnique({ where: { id: decoded.split(':')[0] } });
-    if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { admin, error } = await requireAdmin(request);
+  if (error) return error;
 
+  try {
     const data = await request.json();
-    if (!data.name || !data.content) return NextResponse.json({ error: 'Name and content are required' }, { status: 400 });
+    const name = sanitizeString(data.name, 100);
+    const content = sanitizeString(data.content, 2000);
+    const role = sanitizeString(data.role, 100);
+    const company = sanitizeString(data.company, 100);
+    const imageUrl = sanitizeUrl(data.imageUrl);
+    const order = sanitizeInt(data.order);
+    const active = sanitizeBool(data.active);
+    const rating = sanitizeInt(data.rating, 1, 5);
+
+    if (!name || !content) {
+      return NextResponse.json({ error: 'Name and content are required' }, { status: 400 });
+    }
 
     const testimonial = await db.testimonial.create({
-      data: {
-        name: data.name, role: data.role || '', company: data.company || '',
-        content: data.content, rating: data.rating || 5, imageUrl: data.imageUrl || '',
-        order: data.order ?? 0, active: data.active ?? true,
-      },
+      data: { name, role, company, content, rating, imageUrl: imageUrl || '', order, active },
     });
     return NextResponse.json(testimonial, { status: 201 });
   } catch {
@@ -38,16 +44,27 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const decoded = Buffer.from(authHeader.replace('Bearer ', ''), 'base64').toString('utf-8');
-    const admin = await db.admin.findUnique({ where: { id: decoded.split(':')[0] } });
-    if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { admin, error } = await requireAdmin(request);
+  if (error) return error;
 
+  try {
     const data = await request.json();
-    if (!data.id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
-    const { id, ...updates } = data;
+    const { id, ...rawUpdates } = data;
+
+    if (!id || !isValidCuid(id)) {
+      return NextResponse.json({ error: 'Valid ID required' }, { status: 400 });
+    }
+
+    const updates: Record<string, unknown> = {};
+    if (rawUpdates.name !== undefined) updates.name = sanitizeString(rawUpdates.name, 100);
+    if (rawUpdates.content !== undefined) updates.content = sanitizeString(rawUpdates.content, 2000);
+    if (rawUpdates.role !== undefined) updates.role = sanitizeString(rawUpdates.role, 100);
+    if (rawUpdates.company !== undefined) updates.company = sanitizeString(rawUpdates.company, 100);
+    if (rawUpdates.imageUrl !== undefined) updates.imageUrl = sanitizeUrl(rawUpdates.imageUrl);
+    if (rawUpdates.order !== undefined) updates.order = sanitizeInt(rawUpdates.order);
+    if (rawUpdates.active !== undefined) updates.active = sanitizeBool(rawUpdates.active);
+    if (rawUpdates.rating !== undefined) updates.rating = sanitizeInt(rawUpdates.rating, 1, 5);
+
     const testimonial = await db.testimonial.update({ where: { id }, data: updates });
     return NextResponse.json(testimonial);
   } catch {
@@ -56,16 +73,15 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const decoded = Buffer.from(authHeader.replace('Bearer ', ''), 'base64').toString('utf-8');
-    const admin = await db.admin.findUnique({ where: { id: decoded.split(':')[0] } });
-    if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { admin, error } = await requireAdmin(request);
+  if (error) return error;
 
+  try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
+    if (!id || !isValidCuid(id)) {
+      return NextResponse.json({ error: 'Valid ID required' }, { status: 400 });
+    }
     await db.testimonial.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch {

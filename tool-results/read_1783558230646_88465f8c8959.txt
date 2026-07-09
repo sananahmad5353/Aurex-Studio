@@ -1,0 +1,531 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import { useState } from 'react';
+     4→     4→import {
+     5→     5→  X, Save, Plus, Trash2, Edit3, LogOut, Settings, ImageIcon, Layers, KeyRound, Loader2,
+     6→     6→  Target, BarChart3, TrendingUp, Rocket, Users, Filter, Handshake, Lightbulb,
+     7→     7→  ArrowRight, Zap, Globe, Search, Mail, Megaphone, PieChart, Database,
+     8→     8→  Code, Cpu, Smartphone, Palette, PenTool, Monitor, Shield, Star, Heart,
+     9→     9→  Award, Bookmark, Briefcase, Calendar, Camera, Cloud, MessageSquare, Eye, EyeOff, Film, Play,
+    10→    10→} from 'lucide-react';
+    11→    11→import type { LucideIcon } from 'lucide-react';
+    12→    12→import { Button } from '@/components/ui/button';
+    13→    13→import { Input } from '@/components/ui/input';
+    14→    14→import { Textarea } from '@/components/ui/textarea';
+    15→    15→import { Label } from '@/components/ui/label';
+    16→    16→import { Switch } from '@/components/ui/switch';
+    17→    17→import { useToast } from '@/hooks/use-toast';
+    18→    18→
+    19→    19→const iconMap: Record<string, LucideIcon> = {
+    20→    20→  Target, BarChart3, TrendingUp, Rocket, Users, Filter, Handshake, Lightbulb,
+    21→    21→  ArrowRight, Zap, Globe, Search, Mail, Megaphone, PieChart, Database,
+    22→    22→  Code, Cpu, Smartphone, Palette, PenTool, Monitor, Settings, Shield,
+    23→    23→  Star, Heart, Award, Bookmark, Briefcase, Calendar, Camera, Cloud,
+    24→    24→};
+    25→    25→
+    26→    26→interface Slide { id: string; title: string; subtitle: string; imageUrl: string; ctaText: string; ctaLink: string; order: number; active: boolean; }
+    27→    27→interface ServiceItem { id: string; title: string; description: string; icon: string; order: number; active: boolean; }
+    28→    28→interface TestimonialItem { id: string; name: string; role: string; company: string; content: string; rating: number; imageUrl: string; order: number; active: boolean; }
+    29→    29→interface PartnerItem { id: string; name: string; imageUrl: string; website: string; order: number; active: boolean; }
+    30→    30→interface ContactMsg { id: string; name: string; email: string; phone: string; subject: string; message: string; read: boolean; createdAt: string; }
+    31→    31→interface ReelItem { id: string; platform: string; reelUrl: string; order: number; active: boolean; }
+    32→    32→
+    33→    33→interface AdminPanelProps { open: boolean; onClose: () => void; }
+    34→    34→
+    35→    35→type Tab = 'settings' | 'slides' | 'services' | 'reviews' | 'partners' | 'reels' | 'messages' | 'password';
+    36→    36→
+    37→    37→export default function AdminPanel({ open, onClose }: AdminPanelProps) {
+    38→    38→  const [token, setToken] = useState<string | null>(null);
+    39→    39→  const [email, setEmail] = useState('');
+    40→    40→  const [password, setPassword] = useState('');
+    41→    41→  const [loginLoading, setLoginLoading] = useState(false);
+    42→    42→  const [loginError, setLoginError] = useState('');
+    43→    43→  const [activeTab, setActiveTab] = useState<Tab>('settings');
+    44→    44→  const [loading, setLoading] = useState(false);
+    45→    45→  const { toast } = useToast();
+    46→    46→
+    47→    47→  const [settings, setSettings] = useState<Record<string, string>>({});
+    48→    48→  const [aboutStats, setAboutStats] = useState<{ label: string; value: string }[]>([]);
+    49→    49→  const [slides, setSlides] = useState<Slide[]>([]);
+    50→    50→  const [editingSlide, setEditingSlide] = useState<Partial<Slide> | null>(null);
+    51→    51→  const [slideFormOpen, setSlideFormOpen] = useState(false);
+    52→    52→  const [services, setServices] = useState<ServiceItem[]>([]);
+    53→    53→  const [editingService, setEditingService] = useState<Partial<ServiceItem> | null>(null);
+    54→    54→  const [serviceFormOpen, setServiceFormOpen] = useState(false);
+    55→    55→  const [testimonials, setTestimonials] = useState<TestimonialItem[]>([]);
+    56→    56→  const [editingTestimonial, setEditingTestimonial] = useState<Partial<TestimonialItem> | null>(null);
+    57→    57→  const [testimonialFormOpen, setTestimonialFormOpen] = useState(false);
+    58→    58→  const [partners, setPartners] = useState<PartnerItem[]>([]);
+    59→    59→  const [editingPartner, setEditingPartner] = useState<Partial<PartnerItem> | null>(null);
+    60→    60→  const [partnerFormOpen, setPartnerFormOpen] = useState(false);
+    61→    61→  const [messages, setMessages] = useState<ContactMsg[]>([]);
+    62→    62→  const [reels, setReels] = useState<ReelItem[]>([]);
+    63→    63→  const [editingReel, setEditingReel] = useState<Partial<ReelItem> | null>(null);
+    64→    64→  const [reelFormOpen, setReelFormOpen] = useState(false);
+    65→    65→  const [aboutImages, setAboutImages] = useState<string[]>([]);
+    66→    66→  const [currentPwd, setCurrentPwd] = useState('');
+    67→    67→  const [newPwd, setNewPwd] = useState('');
+    68→    68→  const [confirmPwd, setConfirmPwd] = useState('');
+    69→    69→
+    70→    70→  const h = () => ({ 'Content-Type': 'application/json' as const, Authorization: `Bearer ${token}` as const });
+    71→    71→
+    72→    72→  const fetchData = async () => {
+    73→    73→    const hdrs = h();
+    74→    74→    try { const r = await fetch('/api/settings', { headers: hdrs }); const d = await r.json(); setSettings(d); try { setAboutStats(JSON.parse(d.aboutStats || '[]')); } catch { setAboutStats([]); } } catch { /* */ }
+    75→    75→    try { const r = await fetch('/api/hero-slides', { headers: hdrs }); if (r.ok) setSlides(await r.json()); } catch { /* */ }
+    76→    76→    try { const r = await fetch('/api/services', { headers: hdrs }); if (r.ok) setServices(await r.json()); } catch { /* */ }
+    77→    77→    try { const r = await fetch('/api/testimonials', { headers: hdrs }); if (r.ok) setTestimonials(await r.json()); } catch { /* */ }
+    78→    78→    try { const r = await fetch('/api/partners', { headers: hdrs }); if (r.ok) setPartners(await r.json()); } catch { /* */ }
+    79→    79→    try { const r = await fetch('/api/contact', { headers: hdrs }); if (r.ok) setMessages(await r.json()); } catch { /* */ }
+    80→    80→    try { setAboutImages(JSON.parse(settings.aboutImages || '[]')); } catch { setAboutImages([]); }
+    81→    81→  };
+    82→    82→
+    83→    83→  const handleLogin = async () => {
+    84→    84→    setLoginLoading(true); setLoginError('');
+    85→    85→    try {
+    86→    86→      const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+    87→    87→      const data = await res.json();
+    88→    88→      if (res.ok) { setToken(data.token); toast({ title: 'Logged in successfully' }); void fetchData(); }
+    89→    89→      else setLoginError(data.error || 'Login failed');
+    90→    90→    } catch { setLoginError('Network error'); }
+    91→    91→    setLoginLoading(false);
+    92→    92→  };
+    93→    93→
+    94→    94→  const handleSaveSettings = async () => {
+    95→    95→    setLoading(true);
+    96→    96→    const res = await fetch('/api/settings', { method: 'PUT', headers: h(), body: JSON.stringify({ ...settings, aboutStats: JSON.stringify(aboutStats), aboutImages: JSON.stringify(aboutImages) }) });
+    97→    97→    if (res.ok) toast({ title: 'Settings saved' }); else toast({ title: 'Error', variant: 'destructive' });
+    98→    98→    setLoading(false);
+    99→    99→  };
+   100→   100→
+   101→   101→  const handleSaveReel = async () => {
+   102→   102→    if (!editingReel?.reelUrl) { toast({ title: 'Reel URL is required', variant: 'destructive' }); return; }
+   103→   103→    setLoading(true);
+   104→   104→    if (editingReel.id) await fetch('/api/reels', { method: 'PUT', headers: h(), body: JSON.stringify(editingReel) });
+   105→   105→    else await fetch('/api/reels', { method: 'POST', headers: h(), body: JSON.stringify(editingReel) });
+   106→   106→    toast({ title: editingReel.id ? 'Reel updated' : 'Reel added' });
+   107→   107→    setEditingReel(null); setReelFormOpen(false); void fetchData(); setLoading(false);
+   108→   108→  };
+   109→   109→
+   110→   110→  const handleDeleteReel = async (id: string) => { if (!confirm('Delete?')) return; await fetch(`/api/reels?id=${id}`, { method: 'DELETE', headers: h() }); toast({ title: 'Deleted' }); void fetchData(); };
+   111→   111→
+   112→   112→  const handleSaveSlide = async () => {
+   113→   113→    if (!editingSlide?.title || !editingSlide?.subtitle || !editingSlide?.imageUrl) { toast({ title: 'Missing fields', variant: 'destructive' }); return; }
+   114→   114→    setLoading(true);
+   115→   115→    if (editingSlide.id) await fetch('/api/hero-slides', { method: 'PUT', headers: h(), body: JSON.stringify(editingSlide) });
+   116→   116→    else await fetch('/api/hero-slides', { method: 'POST', headers: h(), body: JSON.stringify(editingSlide) });
+   117→   117→    toast({ title: editingSlide.id ? 'Slide updated' : 'Slide created' });
+   118→   118→    setEditingSlide(null); setSlideFormOpen(false); void fetchData(); setLoading(false);
+   119→   119→  };
+   120→   120→
+   121→   121→  const handleDeleteSlide = async (id: string) => { if (!confirm('Delete this slide?')) return; await fetch(`/api/hero-slides?id=${id}`, { method: 'DELETE', headers: h() }); toast({ title: 'Deleted' }); void fetchData(); };
+   122→   122→
+   123→   123→  const handleSaveService = async () => {
+   124→   124→    if (!editingService?.title || !editingService?.description) { toast({ title: 'Missing fields', variant: 'destructive' }); return; }
+   125→   125→    setLoading(true);
+   126→   126→    if (editingService.id) await fetch('/api/services', { method: 'PUT', headers: h(), body: JSON.stringify(editingService) });
+   127→   127→    else await fetch('/api/services', { method: 'POST', headers: h(), body: JSON.stringify(editingService) });
+   128→   128→    toast({ title: editingService.id ? 'Service updated' : 'Service created' });
+   129→   129→    setEditingService(null); setServiceFormOpen(false); void fetchData(); setLoading(false);
+   130→   130→  };
+   131→   131→
+   132→   132→  const handleDeleteService = async (id: string) => { if (!confirm('Delete this service?')) return; await fetch(`/api/services?id=${id}`, { method: 'DELETE', headers: h() }); toast({ title: 'Deleted' }); void fetchData(); };
+   133→   133→
+   134→   134→  const handleSaveTestimonial = async () => {
+   135→   135→    if (!editingTestimonial?.name || !editingTestimonial?.content) { toast({ title: 'Missing fields', variant: 'destructive' }); return; }
+   136→   136→    setLoading(true);
+   137→   137→    const headers = h();
+   138→   138→    if (editingTestimonial.id) await fetch('/api/testimonials', { method: 'PUT', headers, body: JSON.stringify(editingTestimonial) });
+   139→   139→    else await fetch('/api/testimonials', { method: 'POST', headers, body: JSON.stringify(editingTestimonial) });
+   140→   140→    toast({ title: editingTestimonial.id ? 'Review updated' : 'Review created' });
+   141→   141→    setEditingTestimonial(null); setTestimonialFormOpen(false); void fetchData(); setLoading(false);
+   142→   142→  };
+   143→   143→
+   144→   144→  const handleDeleteTestimonial = async (id: string) => { if (!confirm('Delete this review?')) return; await fetch(`/api/testimonials?id=${id}`, { method: 'DELETE', headers: h() }); toast({ title: 'Deleted' }); void fetchData(); };
+   145→   145→
+   146→   146→  const handleSavePartner = async () => {
+   147→   147→    if (!editingPartner?.name || !editingPartner?.imageUrl) { toast({ title: 'Missing fields', variant: 'destructive' }); return; }
+   148→   148→    setLoading(true);
+   149→   149→    const headers = h();
+   150→   150→    if (editingPartner.id) await fetch('/api/partners', { method: 'PUT', headers, body: JSON.stringify(editingPartner) });
+   151→   151→    else await fetch('/api/partners', { method: 'POST', headers, body: JSON.stringify(editingPartner) });
+   152→   152→    toast({ title: editingPartner.id ? 'Partner updated' : 'Partner created' });
+   153→   153→    setEditingPartner(null); setPartnerFormOpen(false); void fetchData(); setLoading(false);
+   154→   154→  };
+   155→   155→
+   156→   156→  const handleDeletePartner = async (id: string) => { if (!confirm('Delete this partner?')) return; await fetch(`/api/partners?id=${id}`, { method: 'DELETE', headers: h() }); toast({ title: 'Deleted' }); void fetchData(); };
+   157→   157→
+   158→   158→  const handleMarkRead = async (id: string) => {
+   159→   159→    await fetch(`/api/contact?markRead=${id}`, { method: 'GET', headers: h() });
+   160→   160→    void fetchData();
+   161→   161→  };
+   162→   162→
+   163→   163→  const handleDeleteMessage = async (id: string) => { if (!confirm('Delete this message?')) return; await fetch(`/api/contact?id=${id}`, { method: 'DELETE', headers: h() }); toast({ title: 'Deleted' }); void fetchData(); };
+   164→   164→
+   165→   165→  const handleChangePassword = async () => {
+   166→   166→    if (newPwd !== confirmPwd) { toast({ title: 'Passwords do not match', variant: 'destructive' }); return; }
+   167→   167→    if (newPwd.length < 6) { toast({ title: 'Min 6 characters', variant: 'destructive' }); return; }
+   168→   168→    setLoading(true);
+   169→   169→    const res = await fetch('/api/auth/change-password', { method: 'POST', headers: h(), body: JSON.stringify({ currentPassword: currentPwd, newPassword: newPwd }) });
+   170→   170→    const d = await res.json();
+   171→   171→    if (res.ok) { toast({ title: 'Password changed' }); setCurrentPwd(''); setNewPwd(''); setConfirmPwd(''); }
+   172→   172→    else toast({ title: 'Error', description: d.error, variant: 'destructive' });
+   173→   173→    setLoading(false);
+   174→   174→  };
+   175→   175→
+   176→   176→  if (!open) return null;
+   177→   177→
+   178→   178→  // LOGIN
+   179→   179→  if (!token) {
+   180→   180→    return (
+   181→   181→      <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+   182→   182→        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+   183→   183→          <div className="flex justify-between items-center mb-6">
+   184→   184→            <h2 className="text-2xl font-bold text-slate-900">Admin Login</h2>
+   185→   185→            <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors"><X size={20} className="text-slate-500" /></button>
+   186→   186→          </div>
+   187→   187→          {loginError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">{loginError}</div>}
+   188→   188→          <div className="space-y-4">
+   189→   189→            <div><Label htmlFor="email">Email</Label><Input id="email" type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5" /></div>
+   190→   190→            <div><Label htmlFor="password">Password</Label><Input id="password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleLogin()} className="mt-1.5" /></div>
+   191→   191→            <Button onClick={handleLogin} disabled={loginLoading || !email || !password} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-11">
+   192→   192→              {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Sign In
+   193→   193→            </Button>
+   194→   194→          </div>
+   195→   195→        </div>
+   196→   196→      </div>
+   197→   197→    );
+   198→   198→  }
+   199→   199→
+   200→   200→  // DASHBOARD
+   201→   201→  const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
+   202→   202→    { key: 'settings', label: 'Settings', icon: <Settings size={18} /> },
+   203→   203→    { key: 'slides', label: 'Slides', icon: <ImageIcon size={18} /> },
+   204→   204→    { key: 'services', label: 'Services', icon: <Layers size={18} /> },
+   205→   205→    { key: 'reviews', label: 'Reviews', icon: <Star size={18} /> },
+   206→   206→    { key: 'partners', label: 'Partners', icon: <Shield size={18} /> },
+   207→   207→    { key: 'reels', label: 'Reels', icon: <Film size={18} /> },
+   208→   208→    { key: 'messages', label: 'Messages', icon: <MessageSquare size={18} /> },
+   209→   209→    { key: 'password', label: 'Password', icon: <KeyRound size={18} /> },
+   210→   210→  ];
+   211→   211→
+   212→   212→  const unreadCount = messages.filter(m => !m.read).length;
+   213→   213→
+   214→   214→  return (
+   215→   215→    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+   216→   216→      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden">
+   217→   217→        {/* Header */}
+   218→   218→        <div className="flex items-center justify-between px-6 py-4 border-b">
+   219→   219→          <div className="flex items-center gap-3">
+   220→   220→            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900"><span className="text-sm font-bold text-white">A</span></div>
+   221→   221→            <h2 className="text-lg font-bold text-slate-900">Admin Panel</h2>
+   222→   222→          </div>
+   223→   223→          <div className="flex items-center gap-2">
+   224→   224→            <Button variant="ghost" size="sm" onClick={() => { setToken(null); setEmail(''); setPassword(''); setActiveTab('settings'); }} className="text-slate-500 hover:text-red-500"><LogOut size={16} className="mr-1.5" />Logout</Button>
+   225→   225→            <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors"><X size={20} className="text-slate-500" /></button>
+   226→   226→          </div>
+   227→   227→        </div>
+   228→   228→
+   229→   229→        {/* Tabs */}
+   230→   230→        <div className="flex border-b px-4 overflow-x-auto">
+   231→   231→          {tabs.map((tab) => (
+   232→   232→            <button key={tab.key} onClick={() => { setActiveTab(tab.key); if (tab.key === 'messages') void fetchData(); }}
+   233→   233→              className={`flex items-center gap-1.5 px-3 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.key ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+   234→   234→              {tab.icon} {tab.label}
+   235→   235→              {tab.key === 'messages' && unreadCount > 0 && <span className="ml-1 px-1.5 py-0.5 text-xs bg-red-500 text-white rounded-full">{unreadCount}</span>}
+   236→   236→            </button>
+   237→   237→          ))}
+   238→   238→        </div>
+   239→   239→
+   240→   240→        {/* Content */}
+   241→   241→        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+   242→   242→
+   243→   243→          {/* SETTINGS */}
+   244→   244→          {activeTab === 'settings' && (
+   245→   245→            <div className="space-y-6 max-w-2xl">
+   246→   246→              <h3 className="text-lg font-semibold text-slate-900">Site Settings</h3>
+   247→   247→              <div className="space-y-4">
+   248→   248→                <div><Label>Site Name</Label><Input value={settings.siteName || ''} onChange={(e) => setSettings({ ...settings, siteName: e.target.value })} className="mt-1.5" /></div>
+   249→   249→                <div><Label>Tagline</Label><Input value={settings.tagline || ''} onChange={(e) => setSettings({ ...settings, tagline: e.target.value })} className="mt-1.5" /></div>
+   250→   250→                <div><Label>WhatsApp Number</Label><Input value={settings.whatsappNumber || ''} onChange={(e) => setSettings({ ...settings, whatsappNumber: e.target.value })} className="mt-1.5" /></div>
+   251→   251→                <div><Label>Contact Email</Label><Input value={settings.contactEmail || ''} onChange={(e) => setSettings({ ...settings, contactEmail: e.target.value })} className="mt-1.5" /></div>
+   252→   252→                <div><Label>About Title</Label><Input value={settings.aboutTitle || ''} onChange={(e) => setSettings({ ...settings, aboutTitle: e.target.value })} className="mt-1.5" /></div>
+   253→   253→                <div><Label>About Description</Label><Textarea value={settings.aboutDescription || ''} onChange={(e) => setSettings({ ...settings, aboutDescription: e.target.value })} className="mt-1.5" rows={4} /></div>
+   254→   254→                <div>
+   255→   255→                  <div className="flex justify-between items-center mb-3"><Label>Statistics</Label><Button size="sm" variant="outline" onClick={() => setAboutStats([...aboutStats, { label: '', value: '' }])} className="text-xs"><Plus size={14} className="mr-1" />Add</Button></div>
+   256→   256→                  {aboutStats.map((stat, i) => (
+   257→   257→                    <div key={i} className="flex gap-2 mb-2">
+   258→   258→                      <Input value={stat.label} onChange={(e) => { const n = [...aboutStats]; n[i] = { ...n[i], label: e.target.value }; setAboutStats(n); }} placeholder="Label" className="flex-1" />
+   259→   259→                      <Input value={stat.value} onChange={(e) => { const n = [...aboutStats]; n[i] = { ...n[i], value: e.target.value }; setAboutStats(n); }} placeholder="Value" className="w-32" />
+   260→   260→                      <Button size="icon" variant="ghost" onClick={() => setAboutStats(aboutStats.filter((_, idx) => idx !== i))} className="text-red-400 hover:text-red-600 hover:bg-red-50 flex-shrink-0"><Trash2 size={16} /></Button>
+   261→   261→                    </div>
+   262→   262→                  ))}
+   263→   263→                </div>
+   264→   264→                <div><Label>CTA Title</Label><Input value={settings.ctaTitle || ''} onChange={(e) => setSettings({ ...settings, ctaTitle: e.target.value })} className="mt-1.5" /></div>
+   265→   265→                <div><Label>CTA Description</Label><Textarea value={settings.ctaDescription || ''} onChange={(e) => setSettings({ ...settings, ctaDescription: e.target.value })} className="mt-1.5" rows={3} /></div>
+   266→   266→                <div><Label>CTA Button Text</Label><Input value={settings.ctaButtonText || ''} onChange={(e) => setSettings({ ...settings, ctaButtonText: e.target.value })} className="mt-1.5" /></div>
+   267→   267→                <div>
+   268→   268→                  <div className="flex justify-between items-center mb-3"><Label>About Images</Label><Button size="sm" variant="outline" onClick={() => setAboutImages([...aboutImages, ''])} className="text-xs"><Plus size={14} className="mr-1" />Add</Button></div>
+   269→   269→                  <div className="space-y-2">
+   270→   270→                    {aboutImages.map((url, i) => (
+   271→   271→                      <div key={i} className="flex gap-2"><Input value={url} onChange={(e) => { const n = [...aboutImages]; n[i] = e.target.value; setAboutImages(n); }} placeholder={`Image ${i + 1} URL`} className="flex-1" /><Button size="icon" variant="ghost" onClick={() => setAboutImages(aboutImages.filter((_, idx) => idx !== i))} className="text-red-400 hover:text-red-600 hover:bg-red-50 flex-shrink-0"><Trash2 size={16} /></Button></div>
+   272→   272→                    ))}
+   273→   273→                  </div>
+   274→   274→                </div>
+   275→   275→              </div>
+   276→   276→              <Button onClick={handleSaveSettings} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl">{loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}<Save size={16} className="mr-2" />Save Settings</Button>
+   277→   277→            </div>
+   278→   278→          )}
+   279→   279→
+   280→   280→          {/* SLIDES */}
+   281→   281→          {activeTab === 'slides' && (
+   282→   282→            <div className="space-y-6">
+   283→   283→              <div className="flex justify-between items-center">
+   284→   284→                <h3 className="text-lg font-semibold text-slate-900">Hero Slides</h3>
+   285→   285→                <Button onClick={() => { setEditingSlide({ title: '', subtitle: '', imageUrl: '', ctaText: 'Get Started', ctaLink: '#contact', order: slides.length, active: true }); setSlideFormOpen(true); }} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm"><Plus size={16} className="mr-1.5" />Add Slide</Button>
+   286→   286→              </div>
+   287→   287→              {slideFormOpen && editingSlide && (
+   288→   288→                <div className="bg-slate-50 rounded-xl p-6 border space-y-4">
+   289→   289→                  <h4 className="font-semibold text-slate-900">{editingSlide.id ? 'Edit' : 'New'} Slide</h4>
+   290→   290→                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   291→   291→                    <div className="sm:col-span-2"><Label>Title</Label><Input value={editingSlide.title || ''} onChange={(e) => setEditingSlide({ ...editingSlide, title: e.target.value })} className="mt-1.5" /></div>
+   292→   292→                    <div className="sm:col-span-2"><Label>Subtitle</Label><Textarea value={editingSlide.subtitle || ''} onChange={(e) => setEditingSlide({ ...editingSlide, subtitle: e.target.value })} className="mt-1.5" rows={2} /></div>
+   293→   293→                    <div className="sm:col-span-2"><Label>Image URL</Label><Input value={editingSlide.imageUrl || ''} onChange={(e) => setEditingSlide({ ...editingSlide, imageUrl: e.target.value })} className="mt-1.5" /></div>
+   294→   294→                    <div><Label>CTA Text</Label><Input value={editingSlide.ctaText || ''} onChange={(e) => setEditingSlide({ ...editingSlide, ctaText: e.target.value })} className="mt-1.5" /></div>
+   295→   295→                    <div><Label>CTA Link</Label><Input value={editingSlide.ctaLink || ''} onChange={(e) => setEditingSlide({ ...editingSlide, ctaLink: e.target.value })} className="mt-1.5" /></div>
+   296→   296→                    <div><Label>Order</Label><Input type="number" value={editingSlide.order || 0} onChange={(e) => setEditingSlide({ ...editingSlide, order: parseInt(e.target.value) || 0 })} className="mt-1.5" /></div>
+   297→   297→                    <div className="flex items-end pb-1"><div className="flex items-center gap-2"><Switch checked={editingSlide.active ?? true} onCheckedChange={(c) => setEditingSlide({ ...editingSlide, active: c })} /><Label>Active</Label></div></div>
+   298→   298→                  </div>
+   299→   299→                  <div className="flex gap-2">
+   300→   300→                    <Button onClick={handleSaveSlide} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm">{loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Save</Button>
+   301→   301→                    <Button variant="outline" onClick={() => { setSlideFormOpen(false); setEditingSlide(null); }} size="sm">Cancel</Button>
+   302→   302→                  </div>
+   303→   303→                </div>
+   304→   304→              )}
+   305→   305→              <div className="space-y-3">
+   306→   306→                {slides.map((s) => (
+   307→   307→                  <div key={s.id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border">
+   308→   308→                    <div className="w-20 h-14 rounded-lg overflow-hidden bg-slate-200 flex-shrink-0"><img src={s.imageUrl} alt={s.title} className="w-full h-full object-cover" /></div>
+   309→   309→                    <div className="flex-1 min-w-0"><p className="font-medium text-slate-900 truncate">{s.title}</p><p className="text-sm text-slate-500 truncate">{s.subtitle}</p></div>
+   310→   310→                    <span className={`text-xs px-2 py-1 rounded-full ${s.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>{s.active ? 'Active' : 'Inactive'}</span>
+   311→   311→                    <Button size="icon" variant="ghost" onClick={() => { setEditingSlide(s); setSlideFormOpen(true); }} className="h-8 w-8 text-slate-500 hover:text-emerald-600"><Edit3 size={15} /></Button>
+   312→   312→                    <Button size="icon" variant="ghost" onClick={() => handleDeleteSlide(s.id)} className="h-8 w-8 text-slate-500 hover:text-red-500"><Trash2 size={15} /></Button>
+   313→   313→                  </div>
+   314→   314→                ))}
+   315→   315→              </div>
+   316→   316→            </div>
+   317→   317→          )}
+   318→   318→
+   319→   319→          {/* SERVICES */}
+   320→   320→          {activeTab === 'services' && (
+   321→   321→            <div className="space-y-6">
+   322→   322→              <div className="flex justify-between items-center">
+   323→   323→                <h3 className="text-lg font-semibold text-slate-900">Services</h3>
+   324→   324→                <Button onClick={() => { setEditingService({ title: '', description: '', icon: 'TrendingUp', order: services.length, active: true }); setServiceFormOpen(true); }} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm"><Plus size={16} className="mr-1.5" />Add Service</Button>
+   325→   325→              </div>
+   326→   326→              {serviceFormOpen && editingService && (
+   327→   327→                <div className="bg-slate-50 rounded-xl p-6 border space-y-4">
+   328→   328→                  <h4 className="font-semibold text-slate-900">{editingService.id ? 'Edit' : 'New'} Service</h4>
+   329→   329→                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   330→   330→                    <div className="sm:col-span-2"><Label>Title</Label><Input value={editingService.title || ''} onChange={(e) => setEditingService({ ...editingService, title: e.target.value })} className="mt-1.5" /></div>
+   331→   331→                    <div className="sm:col-span-2"><Label>Description</Label><Textarea value={editingService.description || ''} onChange={(e) => setEditingService({ ...editingService, description: e.target.value })} className="mt-1.5" rows={3} /></div>
+   332→   332→                    <div><Label>Icon</Label><select value={editingService.icon || 'TrendingUp'} onChange={(e) => setEditingService({ ...editingService, icon: e.target.value })} className="mt-1.5 w-full h-10 rounded-lg border border-input bg-white px-3 text-sm">{Object.keys(iconMap).map((n) => <option key={n} value={n}>{n}</option>)}</select></div>
+   333→   333→                    <div><Label>Order</Label><Input type="number" value={editingService.order || 0} onChange={(e) => setEditingService({ ...editingService, order: parseInt(e.target.value) || 0 })} className="mt-1.5" /></div>
+   334→   334→                    <div className="flex items-end pb-1"><div className="flex items-center gap-2"><Switch checked={editingService.active ?? true} onCheckedChange={(c) => setEditingService({ ...editingService, active: c })} /><Label>Active</Label></div></div>
+   335→   335→                  </div>
+   336→   336→                  <div className="flex gap-2">
+   337→   337→                    <Button onClick={handleSaveService} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm">{loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Save</Button>
+   338→   338→                    <Button variant="outline" onClick={() => { setServiceFormOpen(false); setEditingService(null); }} size="sm">Cancel</Button>
+   339→   339→                  </div>
+   340→   340→                </div>
+   341→   341→              )}
+   342→   342→              <div className="space-y-3">
+   343→   343→                {services.map((s) => { const Icon = iconMap[s.icon] || TrendingUp; return (
+   344→   344→                  <div key={s.id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border">
+   345→   345→                    <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0"><Icon size={20} className="text-emerald-600" /></div>
+   346→   346→                    <div className="flex-1 min-w-0"><p className="font-medium text-slate-900">{s.title}</p><p className="text-sm text-slate-500 truncate">{s.description}</p></div>
+   347→   347→                    <span className={`text-xs px-2 py-1 rounded-full ${s.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>{s.active ? 'Active' : 'Inactive'}</span>
+   348→   348→                    <Button size="icon" variant="ghost" onClick={() => { setEditingService(s); setServiceFormOpen(true); }} className="h-8 w-8 text-slate-500 hover:text-emerald-600"><Edit3 size={15} /></Button>
+   349→   349→                    <Button size="icon" variant="ghost" onClick={() => handleDeleteService(s.id)} className="h-8 w-8 text-slate-500 hover:text-red-500"><Trash2 size={15} /></Button>
+   350→   350→                  </div>
+   351→   351→                ); })}
+   352→   352→              </div>
+   353→   353→            </div>
+   354→   354→          )}
+   355→   355→
+   356→   356→          {/* REVIEWS */}
+   357→   357→          {activeTab === 'reviews' && (
+   358→   358→            <div className="space-y-6">
+   359→   359→              <div className="flex justify-between items-center">
+   360→   360→                <h3 className="text-lg font-semibold text-slate-900">Client Reviews</h3>
+   361→   361→                <Button onClick={() => { setEditingTestimonial({ name: '', role: '', company: '', content: '', rating: 5, imageUrl: '', order: testimonials.length, active: true }); setTestimonialFormOpen(true); }} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm"><Plus size={16} className="mr-1.5" />Add Review</Button>
+   362→   362→              </div>
+   363→   363→              {testimonialFormOpen && editingTestimonial && (
+   364→   364→                <div className="bg-slate-50 rounded-xl p-6 border space-y-4">
+   365→   365→                  <h4 className="font-semibold text-slate-900">{editingTestimonial.id ? 'Edit' : 'New'} Review</h4>
+   366→   366→                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   367→   367→                    <div><Label>Name *</Label><Input value={editingTestimonial.name || ''} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, name: e.target.value })} className="mt-1.5" /></div>
+   368→   368→                    <div><Label>Role</Label><Input value={editingTestimonial.role || ''} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, role: e.target.value })} className="mt-1.5" /></div>
+   369→   369→                    <div><Label>Company</Label><Input value={editingTestimonial.company || ''} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, company: e.target.value })} className="mt-1.5" /></div>
+   370→   370→                    <div><Label>Rating (1-5)</Label><Input type="number" min="1" max="5" value={editingTestimonial.rating || 5} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, rating: Math.min(5, Math.max(1, parseInt(e.target.value) || 5)) })} className="mt-1.5" /></div>
+   371→   371→                    <div className="sm:col-span-2"><Label>Review Content *</Label><Textarea value={editingTestimonial.content || ''} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, content: e.target.value })} className="mt-1.5" rows={3} /></div>
+   372→   372→                    <div className="sm:col-span-2"><Label>Image URL (optional)</Label><Input value={editingTestimonial.imageUrl || ''} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, imageUrl: e.target.value })} className="mt-1.5" /></div>
+   373→   373→                    <div><Label>Order</Label><Input type="number" value={editingTestimonial.order || 0} onChange={(e) => setEditingTestimonial({ ...editingTestimonial, order: parseInt(e.target.value) || 0 })} className="mt-1.5" /></div>
+   374→   374→                    <div className="flex items-end pb-1"><div className="flex items-center gap-2"><Switch checked={editingTestimonial.active ?? true} onCheckedChange={(c) => setEditingTestimonial({ ...editingTestimonial, active: c })} /><Label>Active</Label></div></div>
+   375→   375→                  </div>
+   376→   376→                  <div className="flex gap-2">
+   377→   377→                    <Button onClick={handleSaveTestimonial} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm">{loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Save</Button>
+   378→   378→                    <Button variant="outline" onClick={() => { setTestimonialFormOpen(false); setEditingTestimonial(null); }} size="sm">Cancel</Button>
+   379→   379→                  </div>
+   380→   380→                </div>
+   381→   381→              )}
+   382→   382→              <div className="space-y-3">
+   383→   383→                {testimonials.map((t) => (
+   384→   384→                  <div key={t.id} className="p-4 bg-slate-50 rounded-xl border">
+   385→   385→                    <div className="flex items-start justify-between gap-4">
+   386→   386→                      <div className="flex-1 min-w-0">
+   387→   387→                        <div className="flex items-center gap-2 mb-1">
+   388→   388→                          <p className="font-semibold text-slate-900">{t.name}</p>
+   389→   389→                          <div className="flex gap-0.5">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={12} className={i < t.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'} />)}</div>
+   390→   390→                        </div>
+   391→   391→                        <p className="text-xs text-slate-500 mb-2">{t.role}{t.company ? `, ${t.company}` : ''}</p>
+   392→   392→                        <p className="text-sm text-slate-600 line-clamp-2">{t.content}</p>
+   393→   393→                      </div>
+   394→   394→                      <div className="flex items-center gap-2 flex-shrink-0">
+   395→   395→                        <span className={`text-xs px-2 py-1 rounded-full ${t.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>{t.active ? 'Active' : 'Inactive'}</span>
+   396→   396→                        <Button size="icon" variant="ghost" onClick={() => { setEditingTestimonial(t); setTestimonialFormOpen(true); }} className="h-8 w-8 text-slate-500 hover:text-emerald-600"><Edit3 size={15} /></Button>
+   397→   397→                        <Button size="icon" variant="ghost" onClick={() => handleDeleteTestimonial(t.id)} className="h-8 w-8 text-slate-500 hover:text-red-500"><Trash2 size={15} /></Button>
+   398→   398→                      </div>
+   399→   399→                    </div>
+   400→   400→                  </div>
+   401→   401→                ))}
+   402→   402→              </div>
+   403→   403→            </div>
+   404→   404→          )}
+   405→   405→
+   406→   406→          {/* PARTNERS */}
+   407→   407→          {activeTab === 'partners' && (
+   408→   408→            <div className="space-y-6">
+   409→   409→              <div className="flex justify-between items-center">
+   410→   410→                <h3 className="text-lg font-semibold text-slate-900">Trusted Partners</h3>
+   411→   411→                <Button onClick={() => { setEditingPartner({ name: '', imageUrl: '', website: '', order: partners.length, active: true }); setPartnerFormOpen(true); }} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm"><Plus size={16} className="mr-1.5" />Add Partner</Button>
+   412→   412→              </div>
+   413→   413→              {partnerFormOpen && editingPartner && (
+   414→   414→                <div className="bg-slate-50 rounded-xl p-6 border space-y-4">
+   415→   415→                  <h4 className="font-semibold text-slate-900">{editingPartner.id ? 'Edit' : 'New'} Partner</h4>
+   416→   416→                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   417→   417→                    <div><Label>Name *</Label><Input value={editingPartner.name || ''} onChange={(e) => setEditingPartner({ ...editingPartner, name: e.target.value })} className="mt-1.5" /></div>
+   418→   418→                    <div><Label>Website</Label><Input value={editingPartner.website || ''} onChange={(e) => setEditingPartner({ ...editingPartner, website: e.target.value })} className="mt-1.5" /></div>
+   419→   419→                    <div className="sm:col-span-2"><Label>Logo Image URL *</Label><Input value={editingPartner.imageUrl || ''} onChange={(e) => setEditingPartner({ ...editingPartner, imageUrl: e.target.value })} className="mt-1.5" /></div>
+   420→   420→                    <div><Label>Order</Label><Input type="number" value={editingPartner.order || 0} onChange={(e) => setEditingPartner({ ...editingPartner, order: parseInt(e.target.value) || 0 })} className="mt-1.5" /></div>
+   421→   421→                    <div className="flex items-end pb-1"><div className="flex items-center gap-2"><Switch checked={editingPartner.active ?? true} onCheckedChange={(c) => setEditingPartner({ ...editingPartner, active: c })} /><Label>Active</Label></div></div>
+   422→   422→                  </div>
+   423→   423→                  <div className="flex gap-2">
+   424→   424→                    <Button onClick={handleSavePartner} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm">{loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Save</Button>
+   425→   425→                    <Button variant="outline" onClick={() => { setPartnerFormOpen(false); setEditingPartner(null); }} size="sm">Cancel</Button>
+   426→   426→                  </div>
+   427→   427→                </div>
+   428→   428→              )}
+   429→   429→              <div className="space-y-3">
+   430→   430→                {partners.map((p) => (
+   431→   431→                  <div key={p.id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border">
+   432→   432→                    <div className="w-16 h-12 rounded-lg overflow-hidden bg-white border flex items-center justify-center p-2 flex-shrink-0"><img src={p.imageUrl} alt={p.name} className="max-h-full max-w-full object-contain" /></div>
+   433→   433→                    <div className="flex-1 min-w-0"><p className="font-medium text-slate-900">{p.name}</p>{p.website && <p className="text-xs text-slate-500 truncate">{p.website}</p>}</div>
+   434→   434→                    <span className={`text-xs px-2 py-1 rounded-full ${p.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>{p.active ? 'Active' : 'Inactive'}</span>
+   435→   435→                    <Button size="icon" variant="ghost" onClick={() => { setEditingPartner(p); setPartnerFormOpen(true); }} className="h-8 w-8 text-slate-500 hover:text-emerald-600"><Edit3 size={15} /></Button>
+   436→   436→                    <Button size="icon" variant="ghost" onClick={() => handleDeletePartner(p.id)} className="h-8 w-8 text-slate-500 hover:text-red-500"><Trash2 size={15} /></Button>
+   437→   437→                  </div>
+   438→   438→                ))}
+   439→   439→              </div>
+   440→   440→            </div>
+   441→   441→          )}
+   442→   442→
+   443→   443→          {/* MESSAGES */}
+   444→   444→          {activeTab === 'messages' && (
+   445→   445→            <div className="space-y-6">
+   446→   446→              <div className="flex justify-between items-center">
+   447→   447→                <h3 className="text-lg font-semibold text-slate-900">Contact Messages</h3>
+   448→   448→                <Button onClick={() => void fetchData()} variant="outline" size="sm"><Loader2 size={14} className="mr-1" />Refresh</Button>
+   449→   449→              </div>
+   450→   450→              {messages.length === 0 && <p className="text-center text-slate-400 py-12">No messages yet. When visitors submit the contact form, their messages will appear here.</p>}
+   451→   451→              <div className="space-y-3">
+   452→   452→                {messages.map((m) => (
+   453→   453→                  <div key={m.id} className={`p-4 rounded-xl border ${m.read ? 'bg-white border-slate-100' : 'bg-emerald-50 border-emerald-200'}`}>
+   454→   454→                    <div className="flex items-start justify-between gap-3">
+   455→   455→                      <div className="flex-1 min-w-0">
+   456→   456→                        <div className="flex items-center gap-2 mb-1">
+   457→   457→                          {!m.read && <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />}
+   458→   458→                          <p className={`font-semibold text-sm ${m.read ? 'text-slate-700' : 'text-slate-900'}`}>{m.name}</p>
+   459→   459→                          <span className="text-xs text-slate-400">{new Date(m.createdAt).toLocaleString()}</span>
+   460→   460→                        </div>
+   461→   461→                        <p className="text-xs text-slate-500 mb-2">{m.email}{m.phone ? ` | ${m.phone}` : ''}{m.subject ? ` | ${m.subject}` : ''}</p>
+   462→   462→                        <p className="text-sm text-slate-600">{m.message}</p>
+   463→   463→                      </div>
+   464→   464→                      <div className="flex flex-col gap-1 flex-shrink-0">
+   465→   465→                        {!m.read && <Button size="icon" variant="ghost" onClick={() => handleMarkRead(m.id)} className="h-7 w-7 text-slate-400 hover:text-emerald-600" title="Mark read"><Eye size={14} /></Button>}
+   466→   466→                        {m.read && <Button size="icon" variant="ghost" onClick={() => handleMarkRead(m.id)} className="h-7 w-7 text-slate-400 hover:text-slate-600" title="Mark unread"><EyeOff size={14} /></Button>}
+   467→   467→                        <Button size="icon" variant="ghost" onClick={() => handleDeleteMessage(m.id)} className="h-7 w-7 text-slate-400 hover:text-red-500"><Trash2 size={14} /></Button>
+   468→   468→                      </div>
+   469→   469→                    </div>
+   470→   470→                  </div>
+   471→   471→                ))}
+   472→   472→              </div>
+   473→   473→            </div>
+   474→   474→          )}
+   475→   475→
+   476→   476→          {/* REELS */}
+   477→   477→          {activeTab === 'reels' && (
+   478→   478→            <div className="space-y-6">
+   479→   479→              <div className="flex justify-between items-center">
+   480→   480→                <h3 className="text-lg font-semibold text-slate-900">Social Reels</h3>
+   481→   481→                <Button onClick={() => { setEditingReel({ platform: 'instagram', reelUrl: '', order: reels.length, active: true }); setReelFormOpen(true); }} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm"><Plus size={16} className="mr-1.5" />Add Reel</Button>
+   482→   482→              </div>
+   483→   483→              {reelFormOpen && editingReel && (
+   484→   484→                <div className="bg-slate-50 rounded-xl p-6 border space-y-4">
+   485→   485→                  <h4 className="font-semibold text-slate-900">{editingReel.id ? 'Edit' : 'New'} Reel</h4>
+   486→   486→                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   487→   487→                    <div><Label>Platform</Label><select value={editingReel.platform || 'instagram'} onChange={(e) => setEditingReel({ ...editingReel, platform: e.target.value })} className="mt-1.5 w-full h-10 rounded-lg border border-input bg-white px-3 text-sm"><option value="instagram">Instagram</option><option value="tiktok">TikTok</option></select></div>
+   488→   488→                    <div className="sm:col-span-2"><Label>Reel URL *</Label><Input value={editingReel.reelUrl || ''} onChange={(e) => setEditingReel({ ...editingReel, reelUrl: e.target.value })} className="mt-1.5" placeholder="https://www.instagram.com/reel/..." /></div>
+   489→   489→                    <div><Label>Order</Label><Input type="number" value={editingReel.order || 0} onChange={(e) => setEditingReel({ ...editingReel, order: parseInt(e.target.value) || 0 })} className="mt-1.5" /></div>
+   490→   490→                    <div className="flex items-end pb-1"><div className="flex items-center gap-2"><Switch checked={editingReel.active ?? true} onCheckedChange={(c) => setEditingReel({ ...editingReel, active: c })} /><Label>Active</Label></div></div>
+   491→   491→                  </div>
+   492→   492→                  <div className="flex gap-2">
+   493→   493→                    <Button onClick={handleSaveReel} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm">{loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Save</Button>
+   494→   494→                    <Button variant="outline" onClick={() => { setReelFormOpen(false); setEditingReel(null); }} size="sm">Cancel</Button>
+   495→   495→                  </div>
+   496→   496→                </div>
+   497→   497→              )}
+   498→   498→              <div className="space-y-3">
+   499→   499→                {reels.map((r) => (
+   500→   500→                  <div key={r.id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border">
+   501→   501→                    <div className="w-10 h-10 rounded-lg bg-pink-50 flex items-center justify-center flex-shrink-0">
+   502→   502→                      {r.platform === 'tiktok' ? <Play size={18} className="text-slate-600" /> : <Camera size={18} className="text-slate-600" />}
+   503→   503→                    </div>
+   504→   504→                    <div className="flex-1 min-w-0"><p className="text-sm font-medium text-slate-900 truncate">{r.reelUrl}</p><p className="text-xs text-slate-400">{r.platform}</p></div>
+   505→   505→                    <span className={`text-xs px-2 py-1 rounded-full ${r.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>{r.active ? 'Active' : 'Inactive'}</span>
+   506→   506→                    <Button size="icon" variant="ghost" onClick={() => { setEditingReel(r); setReelFormOpen(true); }} className="h-8 w-8 text-slate-500 hover:text-emerald-600"><Edit3 size={15} /></Button>
+   507→   507→                    <Button size="icon" variant="ghost" onClick={() => handleDeleteReel(r.id)} className="h-8 w-8 text-slate-500 hover:text-red-500"><Trash2 size={15} /></Button>
+   508→   508→                  </div>
+   509→   509→                ))}
+   510→   510→                {reels.length === 0 && !reelFormOpen && <p className="text-center text-slate-400 py-8">No reels yet. Add Instagram or TikTok reel URLs to display them on the website.</p>}
+   511→   511→              </div>
+   512→   512→            </div>
+   513→   513→          )}
+   514→   514→
+   515→   515→          {/* PASSWORD */}
+   516→   516→          {activeTab === 'password' && (
+   517→   517→            <div className="space-y-6 max-w-md">
+   518→   518→              <h3 className="text-lg font-semibold text-slate-900">Change Password</h3>
+   519→   519→              <div className="space-y-4">
+   520→   520→                <div><Label>Current Password</Label><Input type="password" value={currentPwd} onChange={(e) => setCurrentPwd(e.target.value)} className="mt-1.5" /></div>
+   521→   521→                <div><Label>New Password</Label><Input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} className="mt-1.5" placeholder="Minimum 6 characters" /></div>
+   522→   522→                <div><Label>Confirm New Password</Label><Input type="password" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} className="mt-1.5" /></div>
+   523→   523→              </div>
+   524→   524→              <Button onClick={handleChangePassword} disabled={loading || !currentPwd || !newPwd || !confirmPwd} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl">{loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}<KeyRound size={16} className="mr-2" />Change Password</Button>
+   525→   525→            </div>
+   526→   526→          )}
+   527→   527→        </div>
+   528→   528→      </div>
+   529→   529→    </div>
+   530→   530→  );
+   531→   531→}

@@ -1,4 +1,6 @@
 import { db } from '@/lib/db';
+import { requireAdmin, isValidCuid } from '@/lib/admin-auth';
+import { sanitizeString, sanitizeUrl, sanitizeInt, sanitizeBool } from '@/lib/validate';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
@@ -14,40 +16,26 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const { admin, error } = await requireAdmin(request);
+  if (error) return error;
+
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const [adminId] = decoded.split(':');
-
-    const admin = await db.admin.findUnique({ where: { id: adminId } });
-    if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const data = await request.json();
-    const { title, subtitle, imageUrl, ctaText, ctaLink, order, active } = data;
+    const title = sanitizeString(data.title, 200);
+    const subtitle = sanitizeString(data.subtitle, 500);
+    const imageUrl = sanitizeUrl(data.imageUrl);
+    const ctaText = sanitizeString(data.ctaText, 50);
+    const ctaLink = sanitizeString(data.ctaLink, 200);
+    const order = sanitizeInt(data.order);
+    const active = sanitizeBool(data.active);
 
     if (!title || !subtitle || !imageUrl) {
-      return NextResponse.json({ error: 'Title, subtitle, and imageUrl are required' }, { status: 400 });
+      return NextResponse.json({ error: 'Title, subtitle, and image URL are required' }, { status: 400 });
     }
 
     const slide = await db.heroSlide.create({
-      data: {
-        title,
-        subtitle,
-        imageUrl,
-        ctaText: ctaText || 'Get Started',
-        ctaLink: ctaLink || '#contact',
-        order: order ?? 0,
-        active: active ?? true,
-      },
+      data: { title, subtitle, imageUrl, ctaText: ctaText || 'Get Started', ctaLink: ctaLink || '#contact', order, active },
     });
-
     return NextResponse.json(slide, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Failed to create slide' }, { status: 500 });
@@ -55,33 +43,27 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const { admin, error } = await requireAdmin(request);
+  if (error) return error;
+
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const [adminId] = decoded.split(':');
-
-    const admin = await db.admin.findUnique({ where: { id: adminId } });
-    if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const data = await request.json();
-    const { id, ...updates } = data;
+    const { id, ...rawUpdates } = data;
 
-    if (!id) {
-      return NextResponse.json({ error: 'Slide ID is required' }, { status: 400 });
+    if (!id || !isValidCuid(id)) {
+      return NextResponse.json({ error: 'Valid slide ID is required' }, { status: 400 });
     }
 
-    const slide = await db.heroSlide.update({
-      where: { id },
-      data: updates,
-    });
+    const updates: Record<string, unknown> = {};
+    if (rawUpdates.title !== undefined) updates.title = sanitizeString(rawUpdates.title, 200);
+    if (rawUpdates.subtitle !== undefined) updates.subtitle = sanitizeString(rawUpdates.subtitle, 500);
+    if (rawUpdates.imageUrl !== undefined) updates.imageUrl = sanitizeUrl(rawUpdates.imageUrl);
+    if (rawUpdates.ctaText !== undefined) updates.ctaText = sanitizeString(rawUpdates.ctaText, 50);
+    if (rawUpdates.ctaLink !== undefined) updates.ctaLink = sanitizeString(rawUpdates.ctaLink, 200);
+    if (rawUpdates.order !== undefined) updates.order = sanitizeInt(rawUpdates.order);
+    if (rawUpdates.active !== undefined) updates.active = sanitizeBool(rawUpdates.active);
 
+    const slide = await db.heroSlide.update({ where: { id }, data: updates });
     return NextResponse.json(slide);
   } catch {
     return NextResponse.json({ error: 'Failed to update slide' }, { status: 500 });
@@ -89,30 +71,16 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const { admin, error } = await requireAdmin(request);
+  if (error) return error;
+
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const [adminId] = decoded.split(':');
-
-    const admin = await db.admin.findUnique({ where: { id: adminId } });
-    if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ error: 'Slide ID is required' }, { status: 400 });
+    if (!id || !isValidCuid(id)) {
+      return NextResponse.json({ error: 'Valid slide ID is required' }, { status: 400 });
     }
-
     await db.heroSlide.delete({ where: { id } });
-
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to delete slide' }, { status: 500 });

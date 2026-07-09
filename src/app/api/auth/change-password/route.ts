@@ -1,40 +1,43 @@
 import { db } from '@/lib/db';
-import { verifyPassword, hashPassword } from '@/lib/auth';
+import { verifyPassword, hashPassword, verifyAuthToken, isPasswordStrong } from '@/lib/auth';
+import { validateChangePassword } from '@/lib/validate';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
+    const payload = verifyAuthToken(request.headers.get('authorization')?.replace('Bearer ', '') || '');
+    if (!payload) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const [adminId] = decoded.split(':');
-
-    const admin = await db.admin.findUnique({ where: { id: adminId } });
+    const admin = await db.admin.findUnique({ where: { id: payload.adminId } });
     if (!admin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { currentPassword, newPassword } = await request.json();
-    if (!currentPassword || !newPassword) {
-      return NextResponse.json({ error: 'Both passwords are required' }, { status: 400 });
+    const body = await request.json();
+    const validation = validateChangePassword(body);
+    if (validation.errors.length > 0) {
+      return NextResponse.json({ error: validation.errors[0] }, { status: 400 });
     }
 
-    if (newPassword.length < 6) {
-      return NextResponse.json({ error: 'New password must be at least 6 characters' }, { status: 400 });
+    // Check password strength
+    const strength = isPasswordStrong(validation.newPassword);
+    if (!strength.strong) {
+      return NextResponse.json({
+        error: 'Password is too weak',
+        requirements: strength.issues,
+      }, { status: 400 });
     }
 
-    const isValid = verifyPassword(currentPassword, admin.password);
+    const isValid = verifyPassword(validation.currentPassword, admin.password);
     if (!isValid) {
       return NextResponse.json({ error: 'Current password is incorrect' }, { status: 401 });
     }
 
     await db.admin.update({
       where: { id: admin.id },
-      data: { password: hashPassword(newPassword) },
+      data: { password: hashPassword(validation.newPassword) },
     });
 
     return NextResponse.json({ success: true, message: 'Password changed successfully' });

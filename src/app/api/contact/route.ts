@@ -1,41 +1,52 @@
 import { db } from '@/lib/db';
+import { validateContactForm, sanitizeString } from '@/lib/validate';
+import { getClientIp } from '@/lib/rate-limit';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, phone, subject, message } = await request.json();
+    const body = await request.json();
+    const validated = validateContactForm(body);
 
-    if (!name || !email || !message) {
-      return NextResponse.json({ error: 'Name, email, and message are required' }, { status: 400 });
+    if (validated.errors.length > 0) {
+      return NextResponse.json({ error: validated.errors[0] }, { status: 400 });
     }
 
-    // Store in database
+    // Store in database (values already sanitized)
     await db.contactMessage.create({
-      data: { name, email, phone: phone || '', subject: subject || '', message },
+      data: {
+        name: validated.name,
+        email: validated.email,
+        phone: validated.phone,
+        subject: validated.subject,
+        message: validated.message,
+      },
     });
 
     // Get WhatsApp number and email from settings
-    const whatsappSetting = await db.siteSetting.findUnique({ where: { key: 'whatsappNumber' } });
-    const emailSetting = await db.siteSetting.findUnique({ where: { key: 'contactEmail' } });
-    const whatsappNumber = whatsappSetting?.value || '+923237939393';
-    const contactEmail = emailSetting?.value || 'sananahmad5353@gmail.com';
+    const [whatsappSetting, emailSetting] = await Promise.all([
+      db.siteSetting.findUnique({ where: { key: 'whatsappNumber' } }),
+      db.siteSetting.findUnique({ where: { key: 'contactEmail' } }),
+    ]);
+    const whatsappNumber = sanitizeString(whatsappSetting?.value || '+923237939393', 20);
+    const contactEmail = sanitizeString(emailSetting?.value || 'sananahmad5353@gmail.com', 254);
 
-    // Build WhatsApp message
+    // Build WhatsApp message (values already sanitized above)
     const waMessage = encodeURIComponent(
       `*New Contact Form Submission*\n\n` +
-      `*Name:* ${name}\n` +
-      `*Email:* ${email}\n` +
-      (phone ? `*Phone:* ${phone}\n` : '') +
-      (subject ? `*Subject:* ${subject}\n` : '') +
-      `*Message:* ${message}\n\n` +
+      `*Name:* ${validated.name}\n` +
+      `*Email:* ${validated.email}\n` +
+      (validated.phone ? `*Phone:* ${validated.phone}\n` : '') +
+      (validated.subject ? `*Subject:* ${validated.subject}\n` : '') +
+      `*Message:* ${validated.message}\n\n` +
       `---\nSent from Aurex Studio Website`
     );
     const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${waMessage}`;
 
     // Build mailto link
-    const mailSubject = encodeURIComponent(subject || `New Contact: ${name}`);
+    const mailSubject = encodeURIComponent(validated.subject || `New Contact: ${validated.name}`);
     const mailBody = encodeURIComponent(
-      `Name: ${name}\nEmail: ${email}\n${phone ? `Phone: ${phone}\n` : ''}${subject ? `Subject: ${subject}\n\n` : ''}Message:\n${message}\n\n---\nSent from Aurex Studio Website`
+      `Name: ${validated.name}\nEmail: ${validated.email}\n${validated.phone ? `Phone: ${validated.phone}\n` : ''}${validated.subject ? `Subject: ${validated.subject}\n\n` : ''}Message:\n${validated.message}\n\n---\nSent from Aurex Studio Website`
     );
     const mailtoUrl = `mailto:${contactEmail}?subject=${mailSubject}&body=${mailBody}`;
 
@@ -54,14 +65,23 @@ export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
     if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const decoded = Buffer.from(authHeader.replace('Bearer ', ''), 'base64').toString('utf-8');
-    const admin = await db.admin.findUnique({ where: { id: decoded.split(':')[0] } });
+
+    // Import verifyAuthToken dynamically
+    const { verifyAuthToken } = await import('@/lib/auth');
+    const payload = verifyAuthToken(authHeader.replace('Bearer ', ''));
+    if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const admin = await db.admin.findUnique({ where: { id: payload.adminId } });
     if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('markRead');
 
     if (id) {
+      // Sanitize the ID (should be a cuid)
+      if (!/^[a-z0-9]+$/.test(id)) {
+        return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
+      }
       await db.contactMessage.update({ where: { id }, data: { read: true } });
       return NextResponse.json({ success: true });
     }
@@ -79,13 +99,19 @@ export async function DELETE(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
     if (!authHeader) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const decoded = Buffer.from(authHeader.replace('Bearer ', ''), 'base64').toString('utf-8');
-    const admin = await db.admin.findUnique({ where: { id: decoded.split(':')[0] } });
+
+    const { verifyAuthToken } = await import('@/lib/auth');
+    const payload = verifyAuthToken(authHeader.replace('Bearer ', ''));
+    if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const admin = await db.admin.findUnique({ where: { id: payload.adminId } });
     if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
+    if (!id || !/^[a-z0-9]+$/.test(id)) {
+      return NextResponse.json({ error: 'Valid ID required' }, { status: 400 });
+    }
     await db.contactMessage.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch {

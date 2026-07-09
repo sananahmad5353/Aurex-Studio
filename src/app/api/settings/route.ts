@@ -1,4 +1,6 @@
 import { db } from '@/lib/db';
+import { requireAdmin, isValidCuid } from '@/lib/admin-auth';
+import { sanitizeString, sanitizeUrl, sanitizeInt, sanitizeBool } from '@/lib/validate';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
@@ -15,31 +17,23 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
+  const { admin, error } = await requireAdmin(request);
+  if (error) return error;
+
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const [adminId] = decoded.split(':');
-
-    const admin = await db.admin.findUnique({ where: { id: adminId } });
-    if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const updates = await request.json();
     if (!updates || typeof updates !== 'object') {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     }
 
     for (const [key, value] of Object.entries(updates)) {
+      const sanitizedKey = sanitizeString(key, 100);
+      const sanitizedValue = sanitizeString(value, 5000);
+      if (!sanitizedKey) continue;
       await db.siteSetting.upsert({
-        where: { key },
-        update: { value: String(value) },
-        create: { key, value: String(value) },
+        where: { key: sanitizedKey },
+        update: { value: sanitizedValue },
+        create: { key: sanitizedKey, value: sanitizedValue },
       });
     }
 
