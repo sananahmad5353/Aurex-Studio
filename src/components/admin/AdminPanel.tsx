@@ -6,7 +6,7 @@ import {
   Target, BarChart3, TrendingUp, Rocket, Users, Filter, Handshake, Lightbulb,
   ArrowRight, Zap, Globe, Search, Mail, Megaphone, PieChart, Database,
   Code, Cpu, Smartphone, Palette, PenTool, Monitor, Shield, Star, Heart,
-  Award, Bookmark, Briefcase, Calendar, Camera, Cloud, MessageSquare, Eye, EyeOff,
+  Award, Bookmark, Briefcase, Calendar, Camera, Cloud, MessageSquare, Eye, EyeOff, Film, Play,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,10 +28,11 @@ interface ServiceItem { id: string; title: string; description: string; icon: st
 interface TestimonialItem { id: string; name: string; role: string; company: string; content: string; rating: number; imageUrl: string; order: number; active: boolean; }
 interface PartnerItem { id: string; name: string; imageUrl: string; website: string; order: number; active: boolean; }
 interface ContactMsg { id: string; name: string; email: string; phone: string; subject: string; message: string; read: boolean; createdAt: string; }
+interface ReelItem { id: string; platform: string; reelUrl: string; order: number; active: boolean; }
 
 interface AdminPanelProps { open: boolean; onClose: () => void; }
 
-type Tab = 'settings' | 'slides' | 'services' | 'reviews' | 'partners' | 'messages' | 'password';
+type Tab = 'settings' | 'slides' | 'services' | 'reviews' | 'partners' | 'reels' | 'messages' | 'password';
 
 export default function AdminPanel({ open, onClose }: AdminPanelProps) {
   const [token, setToken] = useState<string | null>(null);
@@ -58,6 +59,10 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
   const [editingPartner, setEditingPartner] = useState<Partial<PartnerItem> | null>(null);
   const [partnerFormOpen, setPartnerFormOpen] = useState(false);
   const [messages, setMessages] = useState<ContactMsg[]>([]);
+  const [reels, setReels] = useState<ReelItem[]>([]);
+  const [editingReel, setEditingReel] = useState<Partial<ReelItem> | null>(null);
+  const [reelFormOpen, setReelFormOpen] = useState(false);
+  const [aboutImages, setAboutImages] = useState<string[]>([]);
   const [currentPwd, setCurrentPwd] = useState('');
   const [newPwd, setNewPwd] = useState('');
   const [confirmPwd, setConfirmPwd] = useState('');
@@ -72,6 +77,7 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
     try { const r = await fetch('/api/testimonials', { headers: hdrs }); if (r.ok) setTestimonials(await r.json()); } catch { /* */ }
     try { const r = await fetch('/api/partners', { headers: hdrs }); if (r.ok) setPartners(await r.json()); } catch { /* */ }
     try { const r = await fetch('/api/contact', { headers: hdrs }); if (r.ok) setMessages(await r.json()); } catch { /* */ }
+    try { setAboutImages(JSON.parse(settings.aboutImages || '[]')); } catch { setAboutImages([]); }
   };
 
   const handleLogin = async () => {
@@ -87,10 +93,21 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
 
   const handleSaveSettings = async () => {
     setLoading(true);
-    const res = await fetch('/api/settings', { method: 'PUT', headers: h(), body: JSON.stringify({ ...settings, aboutStats: JSON.stringify(aboutStats) }) });
+    const res = await fetch('/api/settings', { method: 'PUT', headers: h(), body: JSON.stringify({ ...settings, aboutStats: JSON.stringify(aboutStats), aboutImages: JSON.stringify(aboutImages) }) });
     if (res.ok) toast({ title: 'Settings saved' }); else toast({ title: 'Error', variant: 'destructive' });
     setLoading(false);
   };
+
+  const handleSaveReel = async () => {
+    if (!editingReel?.reelUrl) { toast({ title: 'Reel URL is required', variant: 'destructive' }); return; }
+    setLoading(true);
+    if (editingReel.id) await fetch('/api/reels', { method: 'PUT', headers: h(), body: JSON.stringify(editingReel) });
+    else await fetch('/api/reels', { method: 'POST', headers: h(), body: JSON.stringify(editingReel) });
+    toast({ title: editingReel.id ? 'Reel updated' : 'Reel added' });
+    setEditingReel(null); setReelFormOpen(false); void fetchData(); setLoading(false);
+  };
+
+  const handleDeleteReel = async (id: string) => { if (!confirm('Delete?')) return; await fetch(`/api/reels?id=${id}`, { method: 'DELETE', headers: h() }); toast({ title: 'Deleted' }); void fetchData(); };
 
   const handleSaveSlide = async () => {
     if (!editingSlide?.title || !editingSlide?.subtitle || !editingSlide?.imageUrl) { toast({ title: 'Missing fields', variant: 'destructive' }); return; }
@@ -187,6 +204,7 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
     { key: 'services', label: 'Services', icon: <Layers size={18} /> },
     { key: 'reviews', label: 'Reviews', icon: <Star size={18} /> },
     { key: 'partners', label: 'Partners', icon: <Shield size={18} /> },
+    { key: 'reels', label: 'Reels', icon: <Film size={18} /> },
     { key: 'messages', label: 'Messages', icon: <MessageSquare size={18} /> },
     { key: 'password', label: 'Password', icon: <KeyRound size={18} /> },
   ];
@@ -246,6 +264,14 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
                 <div><Label>CTA Title</Label><Input value={settings.ctaTitle || ''} onChange={(e) => setSettings({ ...settings, ctaTitle: e.target.value })} className="mt-1.5" /></div>
                 <div><Label>CTA Description</Label><Textarea value={settings.ctaDescription || ''} onChange={(e) => setSettings({ ...settings, ctaDescription: e.target.value })} className="mt-1.5" rows={3} /></div>
                 <div><Label>CTA Button Text</Label><Input value={settings.ctaButtonText || ''} onChange={(e) => setSettings({ ...settings, ctaButtonText: e.target.value })} className="mt-1.5" /></div>
+                <div>
+                  <div className="flex justify-between items-center mb-3"><Label>About Images</Label><Button size="sm" variant="outline" onClick={() => setAboutImages([...aboutImages, ''])} className="text-xs"><Plus size={14} className="mr-1" />Add</Button></div>
+                  <div className="space-y-2">
+                    {aboutImages.map((url, i) => (
+                      <div key={i} className="flex gap-2"><Input value={url} onChange={(e) => { const n = [...aboutImages]; n[i] = e.target.value; setAboutImages(n); }} placeholder={`Image ${i + 1} URL`} className="flex-1" /><Button size="icon" variant="ghost" onClick={() => setAboutImages(aboutImages.filter((_, idx) => idx !== i))} className="text-red-400 hover:text-red-600 hover:bg-red-50 flex-shrink-0"><Trash2 size={16} /></Button></div>
+                    ))}
+                  </div>
+                </div>
               </div>
               <Button onClick={handleSaveSettings} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl">{loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}<Save size={16} className="mr-2" />Save Settings</Button>
             </div>
@@ -443,6 +469,45 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* REELS */}
+          {activeTab === 'reels' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-slate-900">Social Reels</h3>
+                <Button onClick={() => { setEditingReel({ platform: 'instagram', reelUrl: '', order: reels.length, active: true }); setReelFormOpen(true); }} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm"><Plus size={16} className="mr-1.5" />Add Reel</Button>
+              </div>
+              {reelFormOpen && editingReel && (
+                <div className="bg-slate-50 rounded-xl p-6 border space-y-4">
+                  <h4 className="font-semibold text-slate-900">{editingReel.id ? 'Edit' : 'New'} Reel</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><Label>Platform</Label><select value={editingReel.platform || 'instagram'} onChange={(e) => setEditingReel({ ...editingReel, platform: e.target.value })} className="mt-1.5 w-full h-10 rounded-lg border border-input bg-white px-3 text-sm"><option value="instagram">Instagram</option><option value="tiktok">TikTok</option></select></div>
+                    <div className="sm:col-span-2"><Label>Reel URL *</Label><Input value={editingReel.reelUrl || ''} onChange={(e) => setEditingReel({ ...editingReel, reelUrl: e.target.value })} className="mt-1.5" placeholder="https://www.instagram.com/reel/..." /></div>
+                    <div><Label>Order</Label><Input type="number" value={editingReel.order || 0} onChange={(e) => setEditingReel({ ...editingReel, order: parseInt(e.target.value) || 0 })} className="mt-1.5" /></div>
+                    <div className="flex items-end pb-1"><div className="flex items-center gap-2"><Switch checked={editingReel.active ?? true} onCheckedChange={(c) => setEditingReel({ ...editingReel, active: c })} /><Label>Active</Label></div></div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={handleSaveReel} disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl" size="sm">{loading && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}Save</Button>
+                    <Button variant="outline" onClick={() => { setReelFormOpen(false); setEditingReel(null); }} size="sm">Cancel</Button>
+                  </div>
+                </div>
+              )}
+              <div className="space-y-3">
+                {reels.map((r) => (
+                  <div key={r.id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border">
+                    <div className="w-10 h-10 rounded-lg bg-pink-50 flex items-center justify-center flex-shrink-0">
+                      {r.platform === 'tiktok' ? <Play size={18} className="text-slate-600" /> : <Camera size={18} className="text-slate-600" />}
+                    </div>
+                    <div className="flex-1 min-w-0"><p className="text-sm font-medium text-slate-900 truncate">{r.reelUrl}</p><p className="text-xs text-slate-400">{r.platform}</p></div>
+                    <span className={`text-xs px-2 py-1 rounded-full ${r.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>{r.active ? 'Active' : 'Inactive'}</span>
+                    <Button size="icon" variant="ghost" onClick={() => { setEditingReel(r); setReelFormOpen(true); }} className="h-8 w-8 text-slate-500 hover:text-emerald-600"><Edit3 size={15} /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => handleDeleteReel(r.id)} className="h-8 w-8 text-slate-500 hover:text-red-500"><Trash2 size={15} /></Button>
+                  </div>
+                ))}
+                {reels.length === 0 && !reelFormOpen && <p className="text-center text-slate-400 py-8">No reels yet. Add Instagram or TikTok reel URLs to display them on the website.</p>}
               </div>
             </div>
           )}

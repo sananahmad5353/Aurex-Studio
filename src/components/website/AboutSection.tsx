@@ -4,9 +4,17 @@ interface AboutSectionProps {
   title: string;
   description: string;
   stats: { label: string; value: string }[];
+  images: string[];
 }
 
-export default function AboutSection({ title, description, stats }: AboutSectionProps) {
+export default function AboutSection({ title, description, stats, images }: AboutSectionProps) {
+  const imgs = images.length >= 4 ? images : [
+    'https://sfile.chatglm.cn/images-ppt/1f40a979f6b5.jpg',
+    'https://sfile.chatglm.cn/images-ppt/a3d51ca2c3b1.png',
+    'https://sfile.chatglm.cn/images-ppt/1b880d7958b7.png',
+    'https://sfile.chatglm.cn/images-ppt/e5cedb6c668d.jpg',
+  ];
+
   return (
     <section id="about" className="py-20 sm:py-28 bg-slate-50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -15,39 +23,19 @@ export default function AboutSection({ title, description, stats }: AboutSection
           <div className="relative">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
-                <div className="rounded-2xl overflow-hidden aspect-[4/5] bg-emerald-100">
-                  <img
-                    src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=600&q=80&auto=format&fit=crop"
-                    alt="Digital strategy meeting"
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
+                <div className="rounded-2xl overflow-hidden aspect-[4/5] bg-slate-200">
+                  <img src={imgs[0]} alt="Digital strategy" className="w-full h-full object-cover" loading="lazy" />
                 </div>
-                <div className="rounded-2xl overflow-hidden aspect-square bg-emerald-200">
-                  <img
-                    src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=400&q=80&auto=format&fit=crop"
-                    alt="Team collaboration"
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
+                <div className="rounded-2xl overflow-hidden aspect-square bg-slate-200">
+                  <img src={imgs[1]} alt="Team collaboration" className="w-full h-full object-cover" loading="lazy" />
                 </div>
               </div>
               <div className="space-y-4 pt-8">
-                <div className="rounded-2xl overflow-hidden aspect-square bg-emerald-100">
-                  <img
-                    src="https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&q=80&auto=format&fit=crop"
-                    alt="Growth analytics"
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
+                <div className="rounded-2xl overflow-hidden aspect-square bg-slate-200">
+                  <img src={imgs[2]} alt="Growth analytics" className="w-full h-full object-cover" loading="lazy" />
                 </div>
-                <div className="rounded-2xl overflow-hidden aspect-[4/5] bg-emerald-200">
-                  <img
-                    src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&q=80&auto=format&fit=crop"
-                    alt="Marketing results"
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
+                <div className="rounded-2xl overflow-hidden aspect-[4/5] bg-slate-200">
+                  <img src={imgs[3]} alt="Marketing results" className="w-full h-full object-cover" loading="lazy" />
                 </div>
               </div>
             </div>
@@ -68,7 +56,6 @@ export default function AboutSection({ title, description, stats }: AboutSection
               {description}
             </p>
 
-            {/* Stats */}
             {stats.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {stats.map((stat, i) => (

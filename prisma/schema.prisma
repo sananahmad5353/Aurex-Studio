@@ -81,3 +81,13 @@ model ContactMessage {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
+model Reel {
+  id        String   @id @default(cuid())
+  platform  String   @default("instagram")
+  reelUrl   String
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
