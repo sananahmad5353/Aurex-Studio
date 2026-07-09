@@ -1,67 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkRateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit';
+
+// Simple in-memory rate limiter (no external imports)
+const limits: Record<string, { count: number; resetAt: number }> = {};
+
+function isRateLimited(key: string, maxReq: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = limits[key];
+  if (!entry || now > entry.resetAt) {
+    limits[key] = { count: 1, resetAt: now + windowMs };
+    return false;
+  }
+  entry.count++;
+  return entry.count > maxReq;
+}
+
+function getClientIp(request: NextRequest): string {
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || 'unknown';
+}
 
 export function middleware(request: NextRequest) {
-  const url = request.nextUrl;
-  const path = url.pathname;
+  const path = request.nextUrl.pathname;
 
-  // Rate limiting - login
-  if (path === '/api/auth/login') {
-    const ip = getClientIp(request);
-    const result = checkRateLimit(`login:${ip}`, RATE_LIMITS.login);
-    if (!result.allowed) {
-      return NextResponse.json(
-        { error: 'Too many login attempts.' },
-        { status: 429, headers: { 'Retry-After': String(result.retryAfter) } }
-      );
-    }
-  }
-
-  // Rate limiting - change password
-  if (path === '/api/auth/change-password') {
-    const ip = getClientIp(request);
-    const result = checkRateLimit(`changepw:${ip}`, RATE_LIMITS.changePassword);
-    if (!result.allowed) {
-      return NextResponse.json(
-        { error: 'Too many attempts.' },
-        { status: 429, headers: { 'Retry-After': String(result.retryAfter) } }
-      );
-    }
-  }
-
-  // Rate limiting - contact form
-  if (path === '/api/contact' && request.method === 'POST') {
-    const ip = getClientIp(request);
-    const result = checkRateLimit(`contact:${ip}`, RATE_LIMITS.contact);
-    if (!result.allowed) {
-      return NextResponse.json(
-        { error: 'Too many messages.' },
-        { status: 429, headers: { 'Retry-After': String(result.retryAfter) } }
-      );
-    }
-  }
-
-  // Rate limiting - 2FA
-  if (path.startsWith('/api/auth/2fa')) {
-    const ip = getClientIp(request);
-    const result = checkRateLimit(`2fa:${ip}`, RATE_LIMITS.twoFactor);
-    if (!result.allowed) {
-      return NextResponse.json(
-        { error: 'Too many 2FA attempts.' },
-        { status: 429, headers: { 'Retry-After': String(result.retryAfter) } }
-      );
-    }
-  }
-
-  // Rate limiting - non-GET API
+  // Only rate-limit POST/PUT/DELETE API routes
   if (path.startsWith('/api/') && request.method !== 'GET') {
     const ip = getClientIp(request);
-    const result = checkRateLimit(`api:${ip}`, RATE_LIMITS.generalApi);
-    if (!result.allowed) {
-      return NextResponse.json(
-        { error: 'Too many requests.' },
-        { status: 429, headers: { 'Retry-After': String(result.retryAfter) } }
-      );
+    if (isRateLimited(`api:${ip}`, 30, 60000)) {
+      return NextResponse.json({ error: 'Too many requests.' }, { status: 429 });
     }
   }
 
