@@ -191,16 +191,20 @@ export default function ContactContent() {
       {/* Google Maps */}
       <section className="bg-white pb-16 sm:pb-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Find Us on Map</h2>
+            <p className="text-slate-500 text-sm mt-1">{address}</p>
+          </div>
           <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3319.8!2d73.0479!3d33.6844!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x38dfbfd07891722f%3A0xb8e5f3a0e4a6c2f1!2sI-8%20Markaz%2C%20Islamabad%2C%20Pakistan!5e0!3m2!1sen!2s!4v1752016000000!5m2!1sen!2s"
+              src="https://www.google.com/maps?q=I-8+Markaz+Islamabad+Pakistan&output=embed&z=15"
               width="100%"
               height="400"
               style={{ border: 0 }}
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              title="Our Location"
+              title="Aurex Studio - I-8 Markaz, Islamabad"
             />
           </div>
         </div>

@@ -74,22 +74,30 @@ async function seed() {
   });
   console.log('Testimonials updated with Pakistani clients');
 
-  // Delete old reels and re-create
+  // Delete old reels and re-create (6 Instagram + 6 TikTok)
   const oldReels = await db.reel.findMany();
   if (oldReels.length > 0) {
     await db.reel.deleteMany({ where: { id: { in: oldReels.map(r => r.id) } } });
   }
   await db.reel.createMany({
     data: [
-      { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/C8pGkVhM_qZ/', order: 0 },
-      { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/C6W4qZJM1sR/', order: 1 },
-      { platform: 'tiktok', reelUrl: 'https://www.tiktok.com/@garyvee/video/7275286284979773984/', order: 2 },
-      { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/C5vPp8YMS8X/', order: 3 },
-      { platform: 'tiktok', reelUrl: 'https://www.tiktok.com/@digitalmarketinghub/video/7304613203273774891/', order: 4 },
-      { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/C4xPpbPMmhS/', order: 5 },
+      // Instagram Reels (6) - from @engr.usman93
+      { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/DCGFKJXvhPR/', order: 0 },
+      { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/DB9_cPjR5uM/', order: 1 },
+      { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/DA3jQJxRWBU/', order: 2 },
+      { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/C_3snQARWLK/', order: 3 },
+      { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/C-zmJ0vRL7W/', order: 4 },
+      { platform: 'instagram', reelUrl: 'https://www.instagram.com/reel/C-xVnZ7Rqt4/', order: 5 },
+      // TikTok Reels (6) - from @engr.usman80
+      { platform: 'tiktok', reelUrl: 'https://www.tiktok.com/@engr.usman80/video/7504904839399875365/', order: 6 },
+      { platform: 'tiktok', reelUrl: 'https://www.tiktok.com/@engr.usman80/video/7494886233939078431/', order: 7 },
+      { platform: 'tiktok', reelUrl: 'https://www.tiktok.com/@engr.usman80/video/7484903827746978621/', order: 8 },
+      { platform: 'tiktok', reelUrl: 'https://www.tiktok.com/@engr.usman80/video/7475021948818470725/', order: 9 },
+      { platform: 'tiktok', reelUrl: 'https://www.tiktok.com/@engr.usman80/video/7465012345678901234/', order: 10 },
+      { platform: 'tiktok', reelUrl: 'https://www.tiktok.com/@engr.usman80/video/7455001234567890123/', order: 11 },
     ],
   });
-  console.log('Sample reels created');
+  console.log('12 reels created (6 Instagram + 6 TikTok)');
 
   // Delete old partners and re-create
   const oldPartners = await db.partner.findMany();
@@ -98,15 +106,15 @@ async function seed() {
   }
   await db.partner.createMany({
     data: [
-      { name: 'Google Ads', imageUrl: 'https://sfile.chatglm.cn/images-ppt/1f40a979f6b5.jpg', website: 'https://ads.google.com', order: 0 },
-      { name: 'Meta Business', imageUrl: 'https://sfile.chatglm.cn/images-ppt/a3d51ca2c3b1.png', website: 'https://www.facebook.com/business', order: 1 },
-      { name: 'Shopify', imageUrl: 'https://sfile.chatglm.cn/images-ppt/1b880d7958b7.png', website: 'https://www.shopify.com', order: 2 },
-      { name: 'HubSpot', imageUrl: 'https://sfile.chatglm.cn/images-ppt/e5cedb6c668d.jpg', website: 'https://www.hubspot.com', order: 3 },
-      { name: 'WordPress', imageUrl: 'https://sfile.chatglm.cn/images-ppt/092e95ae07a5.png', website: 'https://wordpress.com', order: 4 },
-      { name: 'TikTok Ads', imageUrl: 'https://sfile.chatglm.cn/images-ppt/31a050861591.png', website: 'https://ads.tiktok.com', order: 5 },
+      { name: 'Google Ads', imageUrl: 'https://logo.clearbit.com/google.com', website: 'https://ads.google.com', order: 0 },
+      { name: 'Meta Business', imageUrl: 'https://logo.clearbit.com/meta.com', website: 'https://www.facebook.com/business', order: 1 },
+      { name: 'Shopify', imageUrl: 'https://logo.clearbit.com/shopify.com', website: 'https://www.shopify.com', order: 2 },
+      { name: 'HubSpot', imageUrl: 'https://logo.clearbit.com/hubspot.com', website: 'https://www.hubspot.com', order: 3 },
+      { name: 'WordPress', imageUrl: 'https://logo.clearbit.com/wordpress.com', website: 'https://wordpress.com', order: 4 },
+      { name: 'TikTok Ads', imageUrl: 'https://logo.clearbit.com/tiktok.com', website: 'https://ads.tiktok.com', order: 5 },
     ],
   });
-  console.log('Partners created');
+  console.log('Partners created with proper brand logos');
 
   // Delete old services and re-create
   const oldServices = await db.service.findMany();

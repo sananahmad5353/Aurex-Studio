@@ -13,6 +13,29 @@ interface TrustedPartnersProps {
   partners: PartnerItem[];
 }
 
+const BRAND_COLORS: Record<string, string> = {
+  'google': 'bg-blue-50 text-blue-700',
+  'meta': 'bg-blue-50 text-blue-600',
+  'facebook': 'bg-blue-50 text-blue-600',
+  'shopify': 'bg-green-50 text-green-700',
+  'hubspot': 'bg-orange-50 text-orange-700',
+  'wordpress': 'bg-blue-50 text-indigo-700',
+  'tiktok': 'bg-slate-50 text-slate-800',
+  'instagram': 'bg-pink-50 text-pink-700',
+  'youtube': 'bg-red-50 text-red-700',
+  'microsoft': 'bg-blue-50 text-blue-700',
+  'aws': 'bg-amber-50 text-amber-700',
+  'stripe': 'bg-violet-50 text-violet-700',
+};
+
+function getBrandClass(name: string): string {
+  const lower = name.toLowerCase();
+  for (const [key, cls] of Object.entries(BRAND_COLORS)) {
+    if (lower.includes(key)) return cls;
+  }
+  return 'bg-slate-50 text-slate-600';
+}
+
 export default function TrustedPartners({ partners }: TrustedPartnersProps) {
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
@@ -37,45 +60,50 @@ export default function TrustedPartners({ partners }: TrustedPartnersProps) {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-8">
-          {partners.map((partner) => (
-            <div
-              key={partner.id}
-              className="flex items-center justify-center p-5 sm:p-6 bg-white rounded-2xl border border-slate-100 hover:shadow-md hover:border-emerald-200 transition-all duration-300 group min-h-[80px]"
-            >
-              {partner.website ? (
-                <a href={partner.website} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full">
-                  {failedImages.has(partner.id) ? (
-                    <span className="text-sm font-semibold text-slate-400 group-hover:text-emerald-600 transition-colors text-center px-2">
-                      {partner.name}
-                    </span>
-                  ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
+          {partners.map((partner) => {
+            const hasImage = partner.imageUrl && !failedImages.has(partner.id);
+            const brandClass = getBrandClass(partner.name);
+
+            return (
+              <div
+                key={partner.id}
+                className="flex items-center justify-center p-5 sm:p-6 bg-white rounded-2xl border border-slate-100 hover:shadow-md hover:border-emerald-200 transition-all duration-300 group min-h-[90px]"
+              >
+                {partner.website ? (
+                  <a href={partner.website} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full">
+                    {hasImage ? (
+                      <img
+                        src={partner.imageUrl}
+                        alt={partner.name}
+                        className="h-8 w-auto max-w-[120px] object-contain opacity-60 group-hover:opacity-100 transition-opacity duration-300"
+                        loading="lazy"
+                        onError={() => handleImageError(partner.id)}
+                      />
+                    ) : (
+                      <span className={`text-xs sm:text-sm font-bold tracking-wide text-center px-2 py-1 rounded-lg transition-colors ${brandClass} group-hover:scale-105`}>
+                        {partner.name}
+                      </span>
+                    )}
+                  </a>
+                ) : (
+                  hasImage ? (
                     <img
                       src={partner.imageUrl}
                       alt={partner.name}
-                      className="h-8 w-auto max-w-full object-contain opacity-50 group-hover:opacity-100 transition-opacity duration-300"
+                      className="h-8 w-auto max-w-[120px] object-contain opacity-60 group-hover:opacity-100 transition-opacity duration-300"
                       loading="lazy"
                       onError={() => handleImageError(partner.id)}
                     />
-                  )}
-                </a>
-              ) : (
-                failedImages.has(partner.id) ? (
-                  <span className="text-sm font-semibold text-slate-400 group-hover:text-emerald-600 transition-colors text-center px-2">
-                    {partner.name}
-                  </span>
-                ) : (
-                  <img
-                    src={partner.imageUrl}
-                    alt={partner.name}
-                    className="h-8 w-auto max-w-full object-contain opacity-50 group-hover:opacity-100 transition-opacity duration-300"
-                    loading="lazy"
-                    onError={() => handleImageError(partner.id)}
-                  />
-                )
-              )}
-            </div>
-          ))}
+                  ) : (
+                    <span className={`text-xs sm:text-sm font-bold tracking-wide text-center px-2 py-1 rounded-lg transition-colors ${brandClass} group-hover:scale-105`}>
+                      {partner.name}
+                    </span>
+                  )
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
