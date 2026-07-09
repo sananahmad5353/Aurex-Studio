@@ -1,31 +1,29 @@
 ---
 Task ID: 1
-Agent: Main Agent
-Task: Implement comprehensive security features for Aurex Studio website
+Agent: main
+Task: Add reels from Instagram/TikTok with admin control, fix partner images, add social icons to footer, update contact form subject to dropdown
 
 Work Log:
-- Reviewed entire codebase: schema, auth, API routes, admin panel, components
-- Created /src/lib/rate-limit.ts: In-memory sliding-window rate limiter with configurable limits per endpoint
-- Created /src/lib/validate.ts: Input sanitization (XSS prevention), email/URL/phone validators, contact/login/password form validators
-- Created /src/lib/totp.ts: Pure Node.js TOTP implementation (no external deps) with QR code URI generation, timing-safe comparisons
-- Created /src/lib/admin-auth.ts: Centralized admin auth verification helper with requireAdmin() and isValidCuid()
-- Rewrote /src/lib/auth.ts: HMAC-signed tokens (payload.signature format), 24h expiry, PBKDF2 increased to 600K iterations, 32-byte salt, timing-safe comparisons, password strength checker
-- Created /src/middleware.ts: Rate limiting (login 5/15min, contact 3/min, API 60/min), security headers (HSTS, X-Frame-Options DENY, X-Content-Type-Options, CSP, Referrer-Policy, Permissions-Policy), request size validation, sensitive path blocking (/prisma, .env, .db), nonce-based CSP
-- Updated /prisma/schema.prisma: Added 2FA fields (twoFactorEnabled, twoFactorSecret, lastLoginAt, lastLoginIp, failedLoginAttempts, lockedUntil, role) to Admin model
-- Created /api/auth/2fa/route.ts: POST setup, PUT verify enable/disable, GET status endpoints
-- Rewrote /api/auth/login/route.ts: Input validation, account lockout (5 attempts, 30min lock), 2FA flow (twoFactorRequired response), last login tracking
-- Rewrote /api/auth/change-password/route.ts: Centralized auth, password strength validation (8+ chars, uppercase, lowercase, number, special)
-- Updated all 7 CRUD API routes (settings, hero-slides, services, testimonials, partners, reels, contact) to use requireAdmin() and input sanitization
-- Created /components/website/SecurityGuard.tsx: Client-side protection (disable right-click, text selection, drag-and-drop, copy/cut, Ctrl+C/U/S/A/P/Shift+I/J/C, F12, image drag prevention with MutationObserver)
-- Updated /app/layout.tsx: Added SecurityGuard component, cache-control meta tags, robots metadata
-- Updated AdminPanel.tsx: Added Security tab with 2FA setup (QR code via api.qrserver.com), verification, disable flow, security features status display; updated login for 2FA code entry; updated password minimum to 8 chars
-- Updated next.config.ts: Added security headers config, poweredByHeader:false, QR code API domain in images
-- Updated .env: Added AUTH_SECRET for HMAC signing
-- Updated db.ts: Disabled query logging in production
+- Read all current project files to understand state
+- Fixed AdminPanel fetchData to include /api/reels fetch (was missing, causing empty reels tab)
+- Added Instagram URL, TikTok URL, YouTube URL fields to admin Settings tab
+- Added YouTube option to reels platform dropdown in admin panel
+- Fixed TrustedPartners component with image error handling (onError fallback to text display)
+- Added 6 partner seeds with working image URLs (Google Ads, Meta Business, Shopify, HubSpot, WordPress, TikTok Ads)
+- Added social media URL settings to seed (instagram: engr.usman93, tiktok: engr.usman80)
+- Updated Footer with Instagram (gradient hover), TikTok, and YouTube (red hover) SVG icons
+- Updated ContactForm subject field from text input to dropdown with services list + "Other" option
+- When "Other" selected, a custom subject input appears with animation
+- Updated SocialReels with YouTube embed support, profile follow buttons, and proper platform icons
+- Updated page.tsx to pass services, instagramUrl, tiktokUrl, youtubeUrl as props
+- Added 8 service seeds to replace data lost during db reset
+- Re-seeded database and verified all data via /api/public endpoint
+- Build succeeded with zero errors
 
 Stage Summary:
-- All 9 security layers implemented and verified
-- Zero lint errors, clean production build
-- Security headers confirmed working (X-Frame-Options, HSTS, CSP, X-Content-Type-Options, etc.)
-- Auth system verified: correct login returns 200 with HMAC token, wrong password returns 401 with remaining attempts, old base64 tokens rejected
-- 2FA optional: QR code setup, TOTP verification, enable/disable flow in admin Security tab
+- All 8 changes implemented and build-verified
+- Admin panel now fully manages reels (create/edit/delete with Instagram/TikTok/YouTube platform support)
+- Footer has 3 social icons (Instagram with gradient hover, TikTok, YouTube with red hover)
+- Contact form has dropdown subject list populated from services + "Other" custom input option
+- Partner images now gracefully fall back to text name when image fails to load
+- Social media URLs (Instagram/TikTok/YouTube) manageable from admin Settings tab

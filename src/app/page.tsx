@@ -20,7 +20,7 @@ interface ServiceItem { id: string; title: string; description: string; icon: st
 interface TestimonialItem { id: string; name: string; role: string; company: string; content: string; rating: number; imageUrl: string; }
 interface PartnerItem { id: string; name: string; imageUrl: string; website: string; }
 interface ReelItem { id: string; platform: string; reelUrl: string; }
-interface SiteSettings { siteName: string; tagline: string; whatsappNumber: string; contactEmail: string; aboutTitle: string; aboutDescription: string; aboutStats: string; ctaTitle: string; ctaDescription: string; ctaButtonText: string; [key: string]: string; }
+interface SiteSettings { siteName: string; tagline: string; whatsappNumber: string; contactEmail: string; aboutTitle: string; aboutDescription: string; aboutStats: string; ctaTitle: string; ctaDescription: string; ctaButtonText: string; instagramUrl: string; tiktokUrl: string; youtubeUrl: string; [key: string]: string; }
 
 export default function Home() {
   const [data, setData] = useState<{
@@ -34,7 +34,7 @@ export default function Home() {
       .then((r) => r.json())
       .then((d) => setData(d))
       .catch(() => setData({
-        settings: { siteName: 'Aurex Studio', tagline: 'Elevate Your Digital Presence', whatsappNumber: '+923237939393', contactEmail: 'sananahmad5353@gmail.com', aboutTitle: 'About Aurex Studio', aboutDescription: '', aboutStats: '[]', ctaTitle: '', ctaDescription: '', ctaButtonText: '' },
+        settings: { siteName: 'Aurex Studio', tagline: 'Elevate Your Digital Presence', whatsappNumber: '+923237939393', contactEmail: 'sananahmad5353@gmail.com', aboutTitle: 'About Aurex Studio', aboutDescription: '', aboutStats: '[]', ctaTitle: '', ctaDescription: '', ctaButtonText: '', instagramUrl: '', tiktokUrl: '', youtubeUrl: '' },
         slides: [], services: [], testimonials: [], partners: [], reels: [],
       }));
   }, []);
@@ -75,10 +75,16 @@ export default function Home() {
           images={aboutImages}
         />
         <ClientReviews testimonials={testimonials} />
-        <SocialReels reels={reels} />
+        <SocialReels
+          reels={reels}
+          instagramUrl={settings?.instagramUrl || ''}
+          tiktokUrl={settings?.tiktokUrl || ''}
+          youtubeUrl={settings?.youtubeUrl || ''}
+        />
         <ContactForm
           whatsappNumber={settings?.whatsappNumber || '+923237939393'}
           contactEmail={settings?.contactEmail || 'sananahmad5353@gmail.com'}
+          services={services}
         />
         <CTASection
           title={settings?.ctaTitle || 'Ready to Transform Your Business?'}
@@ -90,6 +96,9 @@ export default function Home() {
       <Footer
         siteName={settings?.siteName || 'Aurex Studio'}
         whatsappNumber={settings?.whatsappNumber || '+923237939393'}
+        instagramUrl={settings?.instagramUrl || ''}
+        tiktokUrl={settings?.tiktokUrl || ''}
+        youtubeUrl={settings?.youtubeUrl || ''}
         onAdminClick={() => setAdminOpen(true)}
       />
       <WhatsAppButton number={settings?.whatsappNumber || '+923237939393'} />

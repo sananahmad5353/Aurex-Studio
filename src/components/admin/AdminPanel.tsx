@@ -88,6 +88,7 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
     try { const r = await fetch('/api/testimonials', { headers: hdrs }); if (r.ok) setTestimonials(await r.json()); } catch { /* */ }
     try { const r = await fetch('/api/partners', { headers: hdrs }); if (r.ok) setPartners(await r.json()); } catch { /* */ }
     try { const r = await fetch('/api/contact', { headers: hdrs }); if (r.ok) setMessages(await r.json()); } catch { /* */ }
+    try { const r = await fetch('/api/reels', { headers: hdrs }); if (r.ok) setReels(await r.json()); } catch { /* */ }
     try { setAboutImages(JSON.parse(settings.aboutImages || '[]')); } catch { setAboutImages([]); }
   };
 
@@ -349,6 +350,9 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
                     </div>
                   ))}
                 </div>
+                <div><Label>Instagram URL</Label><Input value={settings.instagramUrl || ''} onChange={(e) => setSettings({ ...settings, instagramUrl: e.target.value })} className="mt-1.5" placeholder="https://www.instagram.com/..." /></div>
+                <div><Label>TikTok URL</Label><Input value={settings.tiktokUrl || ''} onChange={(e) => setSettings({ ...settings, tiktokUrl: e.target.value })} className="mt-1.5" placeholder="https://www.tiktok.com/@..." /></div>
+                <div><Label>YouTube URL</Label><Input value={settings.youtubeUrl || ''} onChange={(e) => setSettings({ ...settings, youtubeUrl: e.target.value })} className="mt-1.5" placeholder="https://www.youtube.com/..." /></div>
                 <div><Label>CTA Title</Label><Input value={settings.ctaTitle || ''} onChange={(e) => setSettings({ ...settings, ctaTitle: e.target.value })} className="mt-1.5" /></div>
                 <div><Label>CTA Description</Label><Textarea value={settings.ctaDescription || ''} onChange={(e) => setSettings({ ...settings, ctaDescription: e.target.value })} className="mt-1.5" rows={3} /></div>
                 <div><Label>CTA Button Text</Label><Input value={settings.ctaButtonText || ''} onChange={(e) => setSettings({ ...settings, ctaButtonText: e.target.value })} className="mt-1.5" /></div>
@@ -572,7 +576,7 @@ export default function AdminPanel({ open, onClose }: AdminPanelProps) {
                 <div className="bg-slate-50 rounded-xl p-6 border space-y-4">
                   <h4 className="font-semibold text-slate-900">{editingReel.id ? 'Edit' : 'New'} Reel</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><Label>Platform</Label><select value={editingReel.platform || 'instagram'} onChange={(e) => setEditingReel({ ...editingReel, platform: e.target.value })} className="mt-1.5 w-full h-10 rounded-lg border border-input bg-white px-3 text-sm"><option value="instagram">Instagram</option><option value="tiktok">TikTok</option></select></div>
+                    <div><Label>Platform</Label><select value={editingReel.platform || 'instagram'} onChange={(e) => setEditingReel({ ...editingReel, platform: e.target.value })} className="mt-1.5 w-full h-10 rounded-lg border border-input bg-white px-3 text-sm"><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="youtube">YouTube</option></select></div>
                     <div className="sm:col-span-2"><Label>Reel URL *</Label><Input value={editingReel.reelUrl || ''} onChange={(e) => setEditingReel({ ...editingReel, reelUrl: e.target.value })} className="mt-1.5" placeholder="https://www.instagram.com/reel/..." /></div>
                     <div><Label>Order</Label><Input type="number" value={editingReel.order || 0} onChange={(e) => setEditingReel({ ...editingReel, order: parseInt(e.target.value) || 0 })} className="mt-1.5" /></div>
                     <div className="flex items-end pb-1"><div className="flex items-center gap-2"><Switch checked={editingReel.active ?? true} onCheckedChange={(c) => setEditingReel({ ...editingReel, active: c })} /><Label>Active</Label></div></div>

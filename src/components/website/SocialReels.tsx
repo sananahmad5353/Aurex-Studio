@@ -1,6 +1,6 @@
 'use client';
 
-import { Instagram, Play } from 'lucide-react';
+import { Instagram, Play, Youtube } from 'lucide-react';
 
 interface ReelItem {
   id: string;
@@ -10,16 +10,23 @@ interface ReelItem {
 
 interface SocialReelsProps {
   reels: ReelItem[];
+  instagramUrl?: string;
+  tiktokUrl?: string;
+  youtubeUrl?: string;
 }
 
 function getEmbedUrl(reelUrl: string, platform: string): string {
   if (platform === 'tiktok') {
-    // Extract video ID from various TikTok URL formats
     const match = reelUrl.match(/video\/(\d+)/);
     if (match) return `https://www.tiktok.com/embed/v2/${match[1]}`;
-    // Try /@user/video/ID format
     const match2 = reelUrl.match(/\/(\d{15,25})/);
     if (match2) return `https://www.tiktok.com/embed/v2/${match2[1]}`;
+  }
+  if (platform === 'youtube') {
+    const shortMatch = reelUrl.match(/\/shorts\/([a-zA-Z0-9_-]+)/);
+    if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`;
+    const videoMatch = reelUrl.match(/(?:v=|\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+    if (videoMatch) return `https://www.youtube.com/embed/${videoMatch[1]}`;
   }
   // Instagram: convert /reel/ID/ or /p/ID/ to embed
   const reelMatch = reelUrl.match(/\/(reel|p)\/([^/?]+)/);
@@ -31,11 +38,30 @@ function getEmbedUrl(reelUrl: string, platform: string): string {
   return reelUrl;
 }
 
-export default function SocialReels({ reels }: SocialReelsProps) {
+function getPlatformIcon(platform: string) {
+  switch (platform) {
+    case 'tiktok':
+      return <Play size={12} className="text-white" />;
+    case 'youtube':
+      return <Youtube size={14} className="text-white" />;
+    default:
+      return <Instagram size={14} className="text-white" />;
+  }
+}
+
+function getPlatformLabel(platform: string) {
+  switch (platform) {
+    case 'tiktok': return 'TikTok';
+    case 'youtube': return 'YouTube';
+    default: return 'Instagram';
+  }
+}
+
+export default function SocialReels({ reels, instagramUrl, tiktokUrl, youtubeUrl }: SocialReelsProps) {
   if (!reels.length) return null;
 
   return (
-    <section className="py-20 sm:py-28 bg-slate-50">
+    <section className="py-20 sm:py-28 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -54,7 +80,6 @@ export default function SocialReels({ reels }: SocialReelsProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {reels.map((reel) => {
             const embedUrl = getEmbedUrl(reel.reelUrl, reel.platform);
-            const isInstagram = reel.platform === 'instagram';
 
             return (
               <div
@@ -63,13 +88,9 @@ export default function SocialReels({ reels }: SocialReelsProps) {
               >
                 {/* Platform badge */}
                 <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md">
-                  {isInstagram ? (
-                    <Instagram size={14} className="text-white" />
-                  ) : (
-                    <Play size={12} className="text-white" />
-                  )}
+                  {getPlatformIcon(reel.platform)}
                   <span className="text-white text-xs font-medium">
-                    {isInstagram ? 'Instagram' : 'TikTok'}
+                    {getPlatformLabel(reel.platform)}
                   </span>
                 </div>
 
@@ -81,7 +102,7 @@ export default function SocialReels({ reels }: SocialReelsProps) {
                     allowFullScreen
                     allow="autoplay; encrypted-media"
                     loading="lazy"
-                    title={`${isInstagram ? 'Instagram' : 'TikTok'} reel`}
+                    title={`${getPlatformLabel(reel.platform)} reel`}
                     style={{ border: 'none', overflow: 'hidden', borderRadius: '16px' }}
                   />
                 </div>
@@ -93,12 +114,43 @@ export default function SocialReels({ reels }: SocialReelsProps) {
         {/* Bottom hint */}
         <div className="text-center mt-10">
           <p className="text-sm text-slate-400">
-            Follow us on{' '}
-            <a href="#" className="text-emerald-500 hover:text-emerald-600 font-medium transition-colors">Instagram</a>
-            {' '}and{' '}
-            <a href="#" className="text-emerald-500 hover:text-emerald-600 font-medium transition-colors">TikTok</a>
-            {' '}for more content
+            Follow us for more content
           </p>
+          <div className="flex items-center justify-center gap-4 mt-3">
+            {instagramUrl && (
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-100 hover:bg-gradient-to-tr hover:from-amber-500 hover:via-pink-500 hover:to-purple-600 text-slate-600 hover:text-white text-sm font-medium transition-all duration-300"
+              >
+                <Instagram size={16} />
+                Instagram
+              </a>
+            )}
+            {tiktokUrl && (
+              <a
+                href={tiktokUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-100 hover:bg-slate-900 text-slate-600 hover:text-white text-sm font-medium transition-all duration-300"
+              >
+                <Play size={16} />
+                TikTok
+              </a>
+            )}
+            {youtubeUrl && (
+              <a
+                href={youtubeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-white text-sm font-medium transition-all duration-300"
+              >
+                <Youtube size={16} />
+                YouTube
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </section>

@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 interface PartnerItem {
   id: string;
   name: string;
@@ -12,7 +14,13 @@ interface TrustedPartnersProps {
 }
 
 export default function TrustedPartners({ partners }: TrustedPartnersProps) {
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+
   if (!partners.length) return null;
+
+  const handleImageError = (id: string) => {
+    setFailedImages((prev) => new Set(prev).add(id));
+  };
 
   return (
     <section className="py-14 sm:py-20 bg-slate-50 border-y border-slate-100">
@@ -33,24 +41,38 @@ export default function TrustedPartners({ partners }: TrustedPartnersProps) {
           {partners.map((partner) => (
             <div
               key={partner.id}
-              className="flex items-center justify-center p-5 sm:p-6 bg-white rounded-2xl border border-slate-100 hover:shadow-md hover:border-emerald-200 transition-all duration-300 group"
+              className="flex items-center justify-center p-5 sm:p-6 bg-white rounded-2xl border border-slate-100 hover:shadow-md hover:border-emerald-200 transition-all duration-300 group min-h-[80px]"
             >
               {partner.website ? (
                 <a href={partner.website} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full">
+                  {failedImages.has(partner.id) ? (
+                    <span className="text-sm font-semibold text-slate-400 group-hover:text-emerald-600 transition-colors text-center px-2">
+                      {partner.name}
+                    </span>
+                  ) : (
+                    <img
+                      src={partner.imageUrl}
+                      alt={partner.name}
+                      className="h-8 w-auto max-w-full object-contain opacity-50 group-hover:opacity-100 transition-opacity duration-300"
+                      loading="lazy"
+                      onError={() => handleImageError(partner.id)}
+                    />
+                  )}
+                </a>
+              ) : (
+                failedImages.has(partner.id) ? (
+                  <span className="text-sm font-semibold text-slate-400 group-hover:text-emerald-600 transition-colors text-center px-2">
+                    {partner.name}
+                  </span>
+                ) : (
                   <img
                     src={partner.imageUrl}
                     alt={partner.name}
                     className="h-8 w-auto max-w-full object-contain opacity-50 group-hover:opacity-100 transition-opacity duration-300"
                     loading="lazy"
+                    onError={() => handleImageError(partner.id)}
                   />
-                </a>
-              ) : (
-                <img
-                  src={partner.imageUrl}
-                  alt={partner.name}
-                  className="h-8 w-auto max-w-full object-contain opacity-50 group-hover:opacity-100 transition-opacity duration-300"
-                  loading="lazy"
-                />
+                )
               )}
             </div>
           ))}

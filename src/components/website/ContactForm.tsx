@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Send, Loader2, CheckCircle2, MessageSquare, Mail } from 'lucide-react';
+import { Send, Loader2, CheckCircle2, MessageSquare, Mail, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,46 +10,62 @@ import { Label } from '@/components/ui/label';
 interface ContactFormProps {
   whatsappNumber: string;
   contactEmail: string;
+  services?: { id: string; title: string }[];
 }
 
-export default function ContactForm({ whatsappNumber, contactEmail }: ContactFormProps) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
+const DEFAULT_SUBJECTS = [
+  'Digital Marketing Strategy',
+  'Performance Marketing',
+  'Business Development',
+  'Brand Growth Strategy',
+  'Lead Generation',
+  'Social Media Marketing',
+  'SEO & Content',
+  'E-commerce Growth',
+];
+
+export default function ContactForm({ whatsappNumber, contactEmail, services }: ContactFormProps) {
+  const subjectOptions = services && services.length > 0
+    ? services.map((s) => s.title)
+    : DEFAULT_SUBJECTS;
+
+  const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', customSubject: '', message: '' });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
   const update = (field: string, value: string) => setForm({ ...form, [field]: value });
 
+  const effectiveSubject = form.subject === 'Other' ? form.customSubject : form.subject;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.message) return;
+    if (form.subject === 'Other' && !form.customSubject.trim()) return;
 
     setSending(true);
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, subject: effectiveSubject }),
       });
       const data = await res.json();
 
       if (res.ok && data.whatsappUrl) {
-        // Open WhatsApp with pre-filled message
         window.open(data.whatsappUrl, '_blank');
-        // Also trigger email client after a short delay
         setTimeout(() => {
           window.location.href = data.mailtoUrl;
         }, 1000);
         setSent(true);
-        setForm({ name: '', email: '', phone: '', subject: '', message: '' });
+        setForm({ name: '', email: '', phone: '', subject: '', customSubject: '', message: '' });
       }
     } catch {
-      // Fallback: open WhatsApp directly
       const msg = encodeURIComponent(
-        `*New Contact*\n\nName: ${form.name}\nEmail: ${form.email}\n${form.phone ? `Phone: ${form.phone}\n` : ''}${form.subject ? `Subject: ${form.subject}\n` : ''}Message: ${form.message}`
+        `*New Contact*\n\nName: ${form.name}\nEmail: ${form.email}\n${form.phone ? `Phone: ${form.phone}\n` : ''}${effectiveSubject ? `Subject: ${effectiveSubject}\n` : ''}Message: ${form.message}`
       );
       window.open(`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${msg}`, '_blank');
       setSent(true);
-      setForm({ name: '', email: '', phone: '', subject: '', message: '' });
+      setForm({ name: '', email: '', phone: '', subject: '', customSubject: '', message: '' });
     }
     setSending(false);
   };
@@ -166,15 +182,40 @@ export default function ContactForm({ whatsappNumber, contactEmail }: ContactFor
                   </div>
                   <div>
                     <Label htmlFor="subject">Subject</Label>
-                    <Input
-                      id="subject"
-                      value={form.subject}
-                      onChange={(e) => update('subject', e.target.value)}
-                      placeholder="Project Inquiry"
-                      className="mt-1.5"
-                    />
+                    <div className="relative mt-1.5">
+                      <select
+                        id="subject"
+                        value={form.subject}
+                        onChange={(e) => update('subject', e.target.value)}
+                        className="w-full h-10 rounded-lg border border-input bg-white px-3 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
+                      >
+                        <option value="" disabled>Select a subject</option>
+                        {subjectOptions.map((subj) => (
+                          <option key={subj} value={subj}>{subj}</option>
+                        ))}
+                        <option value="Other">Other</option>
+                      </select>
+                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    </div>
                   </div>
                 </div>
+
+                {/* Custom subject input when "Other" is selected */}
+                {form.subject === 'Other' && (
+                  <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                    <Label htmlFor="customSubject">Your Subject *</Label>
+                    <Input
+                      id="customSubject"
+                      value={form.customSubject}
+                      onChange={(e) => update('customSubject', e.target.value)}
+                      placeholder="Enter your subject here..."
+                      className="mt-1.5"
+                      required
+                      autoFocus
+                    />
+                  </div>
+                )}
+
                 <div>
                   <Label htmlFor="message">Message *</Label>
                   <Textarea
@@ -189,7 +230,7 @@ export default function ContactForm({ whatsappNumber, contactEmail }: ContactFor
                 </div>
                 <Button
                   type="submit"
-                  disabled={sending || !form.name || !form.email || !form.message}
+                  disabled={sending || !form.name || !form.email || !form.message || (form.subject === 'Other' && !form.customSubject.trim())}
                   className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-12 text-base font-semibold"
                 >
                   {sending ? (

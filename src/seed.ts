@@ -6,7 +6,7 @@ async function seed() {
 
   const existingAdmin = await db.admin.findFirst({ where: { email: 'sananahmad5353@gmail.com' } });
   if (!existingAdmin) {
-    await db.admin.create({ email: 'sananahmad5353@gmail.com', password: hashPassword('senan0020') });
+    await db.admin.create({ data: { email: 'sananahmad5353@gmail.com', password: hashPassword('senan0020') } });
     console.log('Admin created');
   }
 
@@ -24,6 +24,9 @@ async function seed() {
       'https://sfile.chatglm.cn/images-ppt/1b880d7958b7.png',
       'https://sfile.chatglm.cn/images-ppt/e5cedb6c668d.jpg',
     ]) },
+    { key: 'instagramUrl', value: 'https://www.instagram.com/engr.usman93/' },
+    { key: 'tiktokUrl', value: 'https://www.tiktok.com/@engr.usman80' },
+    { key: 'youtubeUrl', value: '' },
     { key: 'ctaTitle', value: 'Ready to Transform Your Business?' },
     { key: 'ctaDescription', value: "Let's discuss how our digital marketing expertise can help you achieve your business goals and drive sustainable growth in Pakistan and beyond." },
     { key: 'ctaButtonText', value: 'Start Your Project' },
@@ -81,6 +84,42 @@ async function seed() {
     ],
   });
   console.log('Sample reels created');
+
+  // Delete old partners and re-create
+  const oldPartners = await db.partner.findMany();
+  if (oldPartners.length > 0) {
+    await db.partner.deleteMany({ where: { id: { in: oldPartners.map(p => p.id) } } });
+  }
+  await db.partner.createMany({
+    data: [
+      { name: 'Google Ads', imageUrl: 'https://sfile.chatglm.cn/images-ppt/1f40a979f6b5.jpg', website: 'https://ads.google.com', order: 0 },
+      { name: 'Meta Business', imageUrl: 'https://sfile.chatglm.cn/images-ppt/a3d51ca2c3b1.png', website: 'https://www.facebook.com/business', order: 1 },
+      { name: 'Shopify', imageUrl: 'https://sfile.chatglm.cn/images-ppt/1b880d7958b7.png', website: 'https://www.shopify.com', order: 2 },
+      { name: 'HubSpot', imageUrl: 'https://sfile.chatglm.cn/images-ppt/e5cedb6c668d.jpg', website: 'https://www.hubspot.com', order: 3 },
+      { name: 'WordPress', imageUrl: 'https://sfile.chatglm.cn/images-ppt/092e95ae07a5.png', website: 'https://wordpress.com', order: 4 },
+      { name: 'TikTok Ads', imageUrl: 'https://sfile.chatglm.cn/images-ppt/31a050861591.png', website: 'https://ads.tiktok.com', order: 5 },
+    ],
+  });
+  console.log('Partners created');
+
+  // Delete old services and re-create
+  const oldServices = await db.service.findMany();
+  if (oldServices.length > 0) {
+    await db.service.deleteMany({ where: { id: { in: oldServices.map(s => s.id) } } });
+  }
+  await db.service.createMany({
+    data: [
+      { title: 'Digital Marketing Strategy', description: 'Comprehensive digital marketing strategies tailored for Pakistani businesses. We analyze your market, competitors, and audience to create data-driven plans that deliver measurable growth and ROI across all digital channels.', icon: 'Target', order: 0 },
+      { title: 'Performance Marketing', description: 'Maximize your ad spend with expertly managed Google Ads, Facebook Ads, and TikTok campaigns. Our performance marketing team optimizes every rupee for maximum conversions and lowest cost per acquisition.', icon: 'BarChart3', order: 1 },
+      { title: 'Business Development', description: 'Strategic business development services that help you identify new market opportunities, build strategic partnerships, and create sustainable revenue streams in the Pakistani and regional markets.', icon: 'Rocket', order: 2 },
+      { title: 'Brand Growth Strategy', description: 'Build a powerful brand that dominates your market. From brand identity design to positioning strategy, we create brands that resonate with your target audience and drive long-term loyalty.', icon: 'TrendingUp', order: 3 },
+      { title: 'Lead Generation', description: 'Automated lead generation systems that capture, qualify, and nurture prospects into loyal customers. Our proven funnels deliver consistent, high-quality leads for your sales team.', icon: 'Users', order: 4 },
+      { title: 'Social Media Marketing', description: 'Engage your audience with compelling social media content and campaigns. We manage your presence across Instagram, Facebook, TikTok, and YouTube to build community and drive brand awareness.', icon: 'Megaphone', order: 5 },
+      { title: 'SEO & Content Marketing', description: 'Rank higher on Google with our SEO and content marketing services. We create optimized content that attracts organic traffic, builds authority, and converts visitors into customers.', icon: 'Search', order: 6 },
+      { title: 'E-commerce Solutions', description: 'Complete e-commerce solutions from store setup to conversion optimization. We help you sell more online with optimized product listings, checkout flows, and targeted advertising campaigns.', icon: 'Globe', order: 7 },
+    ],
+  });
+  console.log('Services created');
 
   console.log('Seeding complete!');
 }
