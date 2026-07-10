@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+﻿import { PrismaClient } from '@prisma/client'
 import path from 'path'
 
 const globalForPrisma = globalThis as unknown as {
@@ -8,7 +8,6 @@ const globalForPrisma = globalThis as unknown as {
 function createPrismaClient() {
   const DATABASE_URL = process.env.DATABASE_URL || ''
 
-  // Turso cloud database — use libsql adapter
   if (DATABASE_URL.startsWith('libsql://')) {
     return import('@prisma/adapter-libsql').then(({ PrismaLibSql }) =>
       import('@libsql/client').then(({ createClient }) => {
@@ -22,7 +21,6 @@ function createPrismaClient() {
     )
   }
 
-  // Local SQLite — resolve relative paths to absolute
   let dbUrl = DATABASE_URL
   if (!dbUrl || dbUrl.startsWith('file:')) {
     const relativePath = dbUrl.replace('file:', '') || 'db/custom.db'
